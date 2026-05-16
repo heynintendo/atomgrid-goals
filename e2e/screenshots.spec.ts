@@ -74,6 +74,7 @@ test("screenshots", async ({ page }) => {
     { path: "/employee/check-in/Q1",                      label: "check-in-q1" },
     { path: "/manager/approvals",                         label: "approvals",        roles: ["manager"] },
     { path: `/manager/approvals/${adityaSheetId}`,        label: "approval-review",  roles: ["manager"] },
+    { path: "/manager/check-ins?period=Q1",               label: "check-ins-q1",     roles: ["manager"] },
     { path: "/admin/time-travel",                         label: "time-travel",      roles: ["admin"] },
   ];
 
