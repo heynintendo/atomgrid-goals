@@ -27,7 +27,10 @@ export async function SystemDatePill() {
       <span className="text-xs font-medium text-text-secondary">
         {state.isTraveled ? "Time-travel" : "Live"}
       </span>
-      <span className="font-mono text-xs text-text-muted">
+      <span
+        suppressHydrationWarning
+        className="font-mono text-xs text-text-muted"
+      >
         {format(state.date, "d MMM yyyy")}
       </span>
     </div>

@@ -22,7 +22,10 @@ export async function TimeTravelBanner() {
         <span className="text-xs text-text-secondary">
           <span className="font-medium text-text">Time-travel active</span> ·
           cycle windows read as if today is{" "}
-          <span className="font-mono font-medium text-text">
+          <span
+            suppressHydrationWarning
+            className="font-mono font-medium text-text"
+          >
             {format(state.date, "d MMM yyyy")}
           </span>
         </span>
