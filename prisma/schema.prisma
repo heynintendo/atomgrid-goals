@@ -1,0 +1,281 @@
+// AtomGrid Goal Setting & Tracking Portal — data model
+// Plan section 3.  Prisma 7 + Neon (driverAdapters stable, no preview flag).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────  ENUMS  ─────────────────────────
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum UomType {
+  MIN
+  MAX
+  TIMELINE
+  ZERO
+}
+
+enum CyclePhase {
+  GOAL_SETTING
+  Q1
+  Q2
+  Q3
+  ANNUAL
+  CLOSED
+}
+
+enum GoalSheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  RETURNED
+  LOCKED
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}
+
+enum CheckInPeriod {
+  Q1
+  Q2
+  Q3
+  ANNUAL
+}
+
+enum AuditAction {
+  GOAL_UNLOCKED
+  GOAL_TARGET_EDITED
+  GOAL_WEIGHTAGE_EDITED
+  GOAL_DELETED
+  GOAL_RESTORED
+  ADMIN_FORCE_APPROVE
+  SHEET_UNLOCKED
+}
+
+enum EscalationLevel {
+  EMPLOYEE
+  MANAGER
+  SKIP_LEVEL
+  HR
+}
+
+enum EscalationStatus {
+  ACTIVE
+  RESOLVED
+  DISMISSED
+}
+
+// ─────────────────────────  MODELS  ─────────────────────────
+
+model Department {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  users       User[]
+  thrustAreas ThrustArea[]
+  createdAt   DateTime     @default(now())
+}
+
+model ThrustArea {
+  id           String      @id @default(cuid())
+  name         String
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  goals        Goal[]
+  active       Boolean     @default(true)
+
+  @@unique([name, departmentId])
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  name         String
+  role         Role
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  managerId    String?
+  manager      User?       @relation("ManagerReports", fields: [managerId], references: [id])
+  reports      User[]      @relation("ManagerReports")
+  entraOid     String?     @unique // Entra ID object id, populated on first SSO login
+  avatarUrl    String?
+
+  goalSheets     GoalSheet[]       @relation("GoalSheetOwner")
+  approvedSheets GoalSheet[]       @relation("GoalSheetApprover")
+  sharedFromMe   SharedGoalLink[]  @relation("SharedSource")
+  auditLogs      AuditLog[]
+  escalations    EscalationEvent[] @relation("EscalationTarget")
+
+  createdAt DateTime @default(now())
+
+  @@index([managerId])
+  @@index([role])
+  @@index([departmentId])
+}
+
+model Cycle {
+  id                 String      @id @default(cuid())
+  name               String // "FY2026"
+  startDate          DateTime
+  endDate            DateTime
+  phase              CyclePhase  @default(GOAL_SETTING)
+  goalSettingOpensAt DateTime
+  q1OpensAt          DateTime
+  q2OpensAt          DateTime
+  q3OpensAt          DateTime
+  annualOpensAt      DateTime
+  isActive           Boolean     @default(true)
+  goalSheets         GoalSheet[]
+
+  @@index([isActive])
+}
+
+model GoalSheet {
+  id           String          @id @default(cuid())
+  ownerId      String
+  owner        User            @relation("GoalSheetOwner", fields: [ownerId], references: [id])
+  cycleId      String
+  cycle        Cycle           @relation(fields: [cycleId], references: [id])
+  status       GoalSheetStatus @default(DRAFT)
+  submittedAt  DateTime?
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?           @relation("GoalSheetApprover", fields: [approvedById], references: [id])
+  returnReason String?
+  goals        Goal[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([ownerId, cycleId]) // BRD: one sheet per cycle per user
+  @@index([status])
+  @@index([approvedById])
+}
+
+model Goal {
+  id           String     @id @default(cuid())
+  sheetId      String
+  sheet        GoalSheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  thrustAreaId String
+  thrustArea   ThrustArea @relation(fields: [thrustAreaId], references: [id])
+  title        String
+  description  String?
+  uomType      UomType
+  uomLabel     String // "INR" "%" "days" "incidents"
+  target       Decimal?   @db.Decimal(18, 4) // null only for ZERO type
+  targetDate   DateTime? // required for TIMELINE
+  weightage    Int // 10..100, app-validated, Zod-enforced
+  status       GoalStatus @default(NOT_STARTED)
+
+  sharedFromId String? // self-FK: if set, this is a recipient copy
+  sharedFrom   Goal?   @relation("SharedGoalSource", fields: [sharedFromId], references: [id])
+  sharedCopies Goal[]  @relation("SharedGoalSource")
+
+  checkIns CheckIn[]
+  audits   AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sheetId])
+  @@index([thrustAreaId])
+  @@index([sharedFromId])
+}
+
+model SharedGoalLink {
+  id              String   @id @default(cuid())
+  sourceGoalId    String
+  recipientGoalId String   @unique
+  sourceUserId    String
+  sourceUser      User     @relation("SharedSource", fields: [sourceUserId], references: [id])
+  createdAt       DateTime @default(now())
+
+  @@index([sourceGoalId])
+}
+
+model CheckIn {
+  id               String        @id @default(cuid())
+  goalId           String
+  goal             Goal          @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  period           CheckInPeriod
+  actual           Decimal?      @db.Decimal(18, 4)
+  actualDate       DateTime? // TIMELINE
+  zeroAchieved     Boolean? // ZERO
+  employeeStatus   GoalStatus
+  managerComment   String?
+  managerCommentBy String?
+  managerCommentAt DateTime?
+  computedScore    Decimal?      @db.Decimal(5, 4) // 0.0000..1.0000, stored to avoid recomputing on dashboard
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@unique([goalId, period])
+  @@index([period])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  goalId    String?
+  goal      Goal?       @relation(fields: [goalId], references: [id])
+  sheetId   String?
+  action    AuditAction
+  actorId   String
+  actor     User        @relation(fields: [actorId], references: [id])
+  before    Json?
+  after     Json?
+  reason    String?
+  createdAt DateTime    @default(now())
+
+  @@index([goalId])
+  @@index([sheetId])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+model EscalationRule {
+  id                           String   @id @default(cuid())
+  name                         String
+  triggerType                  String // "GOAL_NOT_SUBMITTED" | "GOAL_NOT_APPROVED" | "CHECKIN_NOT_COMPLETED"
+  thresholdDays                Int
+  escalateToManagerAfterDays   Int
+  escalateToSkipLevelAfterDays Int
+  escalateToHRAfterDays        Int
+  active                       Boolean  @default(true)
+  createdAt                    DateTime @default(now())
+
+  events EscalationEvent[]
+}
+
+model EscalationEvent {
+  id           String           @id @default(cuid())
+  ruleId       String
+  rule         EscalationRule   @relation(fields: [ruleId], references: [id])
+  targetUserId String
+  targetUser   User             @relation("EscalationTarget", fields: [targetUserId], references: [id])
+  currentLevel EscalationLevel  @default(EMPLOYEE)
+  status       EscalationStatus @default(ACTIVE)
+  triggeredAt  DateTime         @default(now())
+  resolvedAt   DateTime?
+  notifiedLog  Json // [{ level, emailedAt, recipientId }]
+  contextRef   String? // sheetId or checkInId
+
+  @@index([status])
+  @@index([targetUserId])
+}
+
+model SystemSettings {
+  id          Int       @id @default(1) // single-row table, enforced via upsert({ where: { id: 1 } })
+  systemDate  DateTime? // null => real Date()
+  updatedAt   DateTime  @updatedAt
+  updatedById String?
+}
