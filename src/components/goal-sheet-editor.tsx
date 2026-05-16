@@ -171,7 +171,7 @@ export function GoalSheetEditor({
         {status === GoalSheetStatus.APPROVED && <LockedBanner approved />}
         {status === GoalSheetStatus.LOCKED && <LockedBanner approved={false} />}
 
-        <WeightageMeter sum={sum} goalCount={fields.length} />
+        <WeightageMeter sum={sum} goalCount={fields.length} status={status} />
 
         <fieldset disabled={!editable} className="contents">
           <div className="space-y-4">

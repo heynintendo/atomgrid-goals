@@ -1,14 +1,23 @@
+import { GoalSheetStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
 
 interface WeightageMeterProps {
   sum: number;
   goalCount: number;
+  status: GoalSheetStatus;
 }
 
-// Compact one-line status bar at the top of the editor.  Color follows
-// the BRD's hard constraint: sum=100 is the only acceptable value.
-// Distance from 100 maps to the status band.
-export function WeightageMeter({ sum, goalCount }: WeightageMeterProps) {
+// Copy strings for the sum=100 case, keyed by sheet status.  Out-of-range
+// sums (>100 or <100) get their own messages handled inline.
+const READY_COPY: Record<GoalSheetStatus, string> = {
+  DRAFT:     "Sum is 100% — eligible to submit",
+  RETURNED:  "Sum is 100% — address manager feedback before resubmitting",
+  SUBMITTED: "Sum is 100% — pending manager review",
+  APPROVED:  "Sum is 100% — sheet approved",
+  LOCKED:    "Sum is 100% — sheet approved and locked",
+};
+
+export function WeightageMeter({ sum, goalCount, status }: WeightageMeterProps) {
   const state = sum === 100 ? "ok" : sum < 100 ? "under" : "over";
   const dotColor =
     state === "ok"
@@ -24,13 +33,11 @@ export function WeightageMeter({ sum, goalCount }: WeightageMeterProps) {
         : "text-danger";
   const message =
     state === "ok"
-      ? "Sum is 100% — eligible to submit"
+      ? READY_COPY[status]
       : state === "under"
         ? `${100 - sum}% short — add or reweight goals`
         : `${sum - 100}% over — reduce some weightages`;
 
-  // Bar fill: capped at 100% width visually; over-100 shows a danger band
-  // overlay on top so the user gets an immediate sense of overshoot.
   const fillPct = Math.min(100, sum);
   const overshootPct = Math.max(0, Math.min(100, sum - 100));
 
