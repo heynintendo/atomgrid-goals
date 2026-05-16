@@ -55,7 +55,12 @@ export function RoleSwitcher({ current, identities }: RoleSwitcherProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="md" disabled={pending}>
+        <Button
+          aria-label="Switch demo identity"
+          variant="secondary"
+          size="md"
+          disabled={pending}
+        >
           <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-surface-2 font-mono text-[10px] font-medium text-text-secondary">
             {current ? initials(current.name) : "?"}
           </span>
