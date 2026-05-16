@@ -21,6 +21,10 @@ export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  // Additional path prefixes that should also activate this nav item.
+  // e.g. Check-ins (href=/employee/check-ins) should also light up when the
+  // user is on /employee/check-in/Q1 since the URL roots diverge by an "s".
+  matchPaths?: string[];
 };
 
 export type NavSection = {
@@ -37,7 +41,13 @@ export const NAV_BY_ROLE: Record<Role, NavSection[]> = {
       items: [
         { href: "/employee", label: "Home", icon: LayoutDashboard },
         { href: "/employee/goal-sheet", label: "Goal sheet", icon: Target },
-        { href: "/employee/check-ins", label: "Check-ins", icon: ClipboardCheck },
+        {
+          href: "/employee/check-ins",
+          label: "Check-ins",
+          icon: ClipboardCheck,
+          // /employee/check-in/Q1 etc. should also light up Check-ins.
+          matchPaths: ["/employee/check-in"],
+        },
       ],
     },
   ],

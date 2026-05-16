@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScorePill } from "@/components/score-pill";
 import {
   Select,
   SelectContent,
@@ -246,7 +247,7 @@ function CheckInGoalRow({
             </span>
           )}
         </div>
-        {preview && <ScorePreview {...preview} />}
+        {preview && <ScorePill display={preview.display} band={preview.band} />}
       </div>
 
       <div className="space-y-1">
@@ -437,31 +438,6 @@ function ToggleOption({
         {sub}
       </span>
     </button>
-  );
-}
-
-function ScorePreview({
-  display,
-  band,
-}: {
-  display: string;
-  band: ScoreBand;
-}) {
-  const dotColor =
-    band === "EXCEEDS"
-      ? "bg-status-on-track"
-      : band === "MEETS"
-        ? "bg-info"
-        : band === "BELOW"
-          ? "bg-warning"
-          : "bg-text-muted";
-  return (
-    <span className="inline-flex items-center gap-2 rounded-sm border border-border bg-surface-2 px-2 py-0.5">
-      <span aria-hidden className={cn("h-1.5 w-1.5 rounded-full", dotColor)} />
-      <span className="font-mono text-xs font-medium tabular-nums text-text">
-        {display}
-      </span>
-    </span>
   );
 }
 

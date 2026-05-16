@@ -156,22 +156,28 @@ function EmptyState() {
 }
 
 // Returns the href of the nav item that best matches the current pathname.
-// "Best" = longest href that's either exactly equal to pathname or a parent
-// prefix (joined by /).  This avoids /manager lighting up when on
-// /manager/approvals.
+// Each item contributes its href plus any additional matchPaths; "best" is
+// the longest matching candidate (so /manager doesn't shadow /manager/approvals,
+// and /employee/check-in/Q1 lights up Check-ins via the matchPaths entry).
 function pickActiveHref(
   pathname: string,
-  sections: { items: { href: string }[] }[],
+  sections: { items: { href: string; matchPaths?: string[] }[] }[],
 ): string | null {
-  let best: string | null = null;
+  let best: { href: string; matchLen: number } | null = null;
   for (const section of sections) {
     for (const item of section.items) {
-      const h = item.href;
-      const matches =
-        h === "/" ? pathname === "/" : pathname === h || pathname.startsWith(`${h}/`);
-      if (!matches) continue;
-      if (best == null || h.length > best.length) best = h;
+      const candidates = [item.href, ...(item.matchPaths ?? [])];
+      for (const c of candidates) {
+        const matches =
+          c === "/"
+            ? pathname === "/"
+            : pathname === c || pathname.startsWith(`${c}/`);
+        if (!matches) continue;
+        if (best == null || c.length > best.matchLen) {
+          best = { href: item.href, matchLen: c.length };
+        }
+      }
     }
   }
-  return best;
+  return best?.href ?? null;
 }
