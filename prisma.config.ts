@@ -1,5 +1,14 @@
 import { defineConfig } from "prisma/config";
 
+// Prisma 7 doesn't auto-load .env for this config file.  Node 22's built-in
+// loadEnvFile reads .env from cwd; the try/catch keeps offline operations
+// (validate/format) working even when no .env exists.
+try {
+  process.loadEnvFile(".env");
+} catch {
+  // .env not present — fall through to the placeholder URL below.
+}
+
 // Prisma 7 moved connection URLs out of schema.prisma into this file.
 // The datasource.url here is the DIRECT (unpooled) Neon connection — used by
 // `prisma migrate` to alter schema.  At runtime, the app talks to Neon via
