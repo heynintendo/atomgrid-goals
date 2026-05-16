@@ -1,81 +1,40 @@
 import { redirect } from "next/navigation";
-import {
-  CheckInPeriod,
-  GoalSheetStatus,
-  Prisma,
-  Role,
-} from "@prisma/client";
+import { Role } from "@prisma/client";
 import {
   CompletionTable,
-  type CheckInState,
   type CompletionRow,
-  type SheetState,
 } from "@/components/completion-table";
 import {
-  CompletionFilters,
+  CompletionFilters as CompletionFiltersUI,
   type FilterGroup,
 } from "@/components/completion-filters";
+import { CompletionExportButton } from "@/components/completion-export-button";
 import { PeriodTabs } from "@/components/period-tabs";
 import { SummaryCard } from "@/components/summary-card";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { getSystemDate } from "@/lib/system-date";
-import type { ScoreBand } from "@/lib/scoring";
+import {
+  applyCompletionFilters,
+  loadCompletionScope,
+  parsePeriod,
+} from "@/lib/completion";
 
-function parsePeriod(raw: string | undefined | string[]): CheckInPeriod {
-  const v = Array.isArray(raw) ? raw[0] : raw;
-  if (v === "Q1" || v === "Q2" || v === "Q3" || v === "ANNUAL") return v;
-  return "Q1";
-}
-
-function bandFor(score: number): ScoreBand {
-  if (score >= 1) return "EXCEEDS";
-  if (score >= 0.7) return "MEETS";
-  return "BELOW";
-}
-
-function deriveCheckInState(
-  sheetState: SheetState,
-  goalsLogged: number,
-  goalsTotal: number,
-  windowState: "pre" | "active" | "past",
-): CheckInState {
-  // Check-ins only apply once a sheet is APPROVED/LOCKED.  Anything earlier
-  // (MISSING/DRAFT/SUBMITTED/RETURNED) is NOT_APPLICABLE — table renders an
-  // em-dash and chip counts skip these rows so the four state buckets sum
-  // to the eligible-employees subset.
-  if (sheetState !== "APPROVED" && sheetState !== "LOCKED") {
-    return "NOT_APPLICABLE";
-  }
-  if (goalsTotal === 0) return "NOT_STARTED";
-  if (goalsLogged >= goalsTotal) return "SUBMITTED";
-  if (goalsLogged > 0) return "IN_PROGRESS";
-  if (windowState === "past") return "OVERDUE";
-  return "NOT_STARTED";
-}
-
-function deriveSheetState(status: GoalSheetStatus | null): SheetState {
-  if (status == null) return "MISSING";
-  return status;
-}
-
-const SHEET_STATES: { value: SheetState; label: string }[] = [
+const SHEET_STATES = [
   { value: "MISSING",   label: "No sheet" },
   { value: "DRAFT",     label: "Draft" },
   { value: "SUBMITTED", label: "Submitted" },
   { value: "APPROVED",  label: "Approved" },
   { value: "LOCKED",    label: "Locked" },
   { value: "RETURNED",  label: "Returned" },
-];
+] as const;
 
-// NOT_APPLICABLE intentionally absent — it's not something a manager
-// filters by; rows in that state surface as em-dashes in the column.
-const CHECKIN_STATES: { value: CheckInState; label: string }[] = [
+// NOT_APPLICABLE intentionally absent — rows in that state show em-dash
+// in the table and aren't bucketed under any chip.
+const CHECKIN_STATES = [
   { value: "NOT_STARTED", label: "Not started" },
   { value: "IN_PROGRESS", label: "In progress" },
   { value: "SUBMITTED",   label: "Submitted" },
   { value: "OVERDUE",     label: "Overdue" },
-];
+] as const;
 
 export default async function CompletionPage({
   searchParams,
@@ -113,8 +72,6 @@ export default async function CompletionPage({
   const isAdmin = user.role === Role.ADMIN;
   const scopeLabel = isAdmin ? "the org" : "your team";
 
-  // Param map used by CompletionFilters to build chip links that preserve
-  // every other current ?key=value while flipping the one being clicked.
   const currentParams: Record<string, string> = {
     period,
     ...(managerFilter ? { manager: managerFilter } : {}),
@@ -122,8 +79,8 @@ export default async function CompletionPage({
     ...(checkFilter ? { check: checkFilter } : {}),
   };
 
-  const cycle = await prisma.cycle.findFirst({ where: { isActive: true } });
-  if (!cycle) {
+  const scope = await loadCompletionScope(user, period);
+  if (!scope) {
     return (
       <div className="mx-auto max-w-2xl p-12">
         <h1 className="text-xl font-semibold text-text">No active cycle</h1>
@@ -135,87 +92,13 @@ export default async function CompletionPage({
     );
   }
 
-  const systemDate = await getSystemDate();
-  const windows: Record<CheckInPeriod, { opens: Date; closes: Date }> = {
-    Q1:     { opens: cycle.q1OpensAt,     closes: cycle.q2OpensAt     },
-    Q2:     { opens: cycle.q2OpensAt,     closes: cycle.q3OpensAt     },
-    Q3:     { opens: cycle.q3OpensAt,     closes: cycle.annualOpensAt },
-    ANNUAL: { opens: cycle.annualOpensAt, closes: cycle.endDate       },
-  };
-  const w = windows[period];
-  const windowState: "pre" | "active" | "past" =
-    systemDate >= w.closes ? "past" : systemDate >= w.opens ? "active" : "pre";
-
-  const where: Prisma.UserWhereInput = {
-    role: Role.EMPLOYEE,
-    ...(isAdmin ? {} : { managerId: user.id }),
-  };
-
-  const employees = await prisma.user.findMany({
-    where,
-    orderBy: [{ name: "asc" }],
-    include: {
-      manager: { select: { id: true, name: true } },
-      department: { select: { name: true } },
-      goalSheets: {
-        where: { cycleId: cycle.id },
-        include: {
-          goals: {
-            include: {
-              checkIns: { where: { period } },
-            },
-          },
-        },
-      },
-    },
+  const allRows = scope.rows;
+  const filteredRows = applyCompletionFilters(allRows, {
+    manager: managerFilter || undefined,
+    sheet: sheetFilter || undefined,
+    check: checkFilter || undefined,
   });
 
-  const allRows: CompletionRow[] = employees.map((e) => {
-    const sheet = e.goalSheets[0] ?? null;
-    const goalsTotal = sheet?.goals.length ?? 0;
-    const goalsLogged =
-      sheet?.goals.filter((g) => g.checkIns[0]?.computedScore != null)
-        .length ?? 0;
-    const scores = (sheet?.goals ?? [])
-      .map((g) => g.checkIns[0]?.computedScore)
-      .filter((s): s is Prisma.Decimal => s != null)
-      .map((s) => Number(s));
-    const avgScore =
-      scores.length > 0
-        ? scores.reduce((a, b) => a + b, 0) / scores.length
-        : null;
-
-    const sheetState = deriveSheetState(sheet?.status ?? null);
-    return {
-      employeeId: e.id,
-      employeeName: e.name,
-      employeeEmail: e.email,
-      departmentName: e.department?.name ?? null,
-      managerId: e.manager?.id ?? null,
-      managerName: e.manager?.name ?? null,
-      sheetState,
-      checkInState: deriveCheckInState(
-        sheetState,
-        goalsLogged,
-        goalsTotal,
-        windowState,
-      ),
-      goalsLogged,
-      goalsTotal,
-      avgScore,
-      avgScoreBand: avgScore != null ? bandFor(avgScore) : null,
-    };
-  });
-
-  const filteredRows = allRows.filter((r) => {
-    if (managerFilter && r.managerId !== managerFilter) return false;
-    if (sheetFilter && r.sheetState !== sheetFilter) return false;
-    if (checkFilter && r.checkInState !== checkFilter) return false;
-    return true;
-  });
-
-  // Derive the manager filter options from the unfiltered roster so the
-  // Manager filter never disappears its own active option after a click.
   const managerOptions = uniqueManagers(allRows);
 
   const filterGroups: FilterGroup[] = [];
@@ -267,14 +150,17 @@ export default async function CompletionPage({
         <p className="font-mono text-xs uppercase tracking-wider text-text-muted">
           Reports · Completion
         </p>
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight text-text">
             Completion dashboard
           </h1>
-          <span className="font-mono text-xs text-text-muted tabular-nums">
-            {filteredRows.length} of {allRows.length}{" "}
-            {allRows.length === 1 ? "employee" : "employees"}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-xs text-text-muted tabular-nums">
+              {filteredRows.length} of {allRows.length}{" "}
+              {allRows.length === 1 ? "employee" : "employees"}
+            </span>
+            <CompletionExportButton currentParams={currentParams} />
+          </div>
         </div>
         <p className="text-sm text-text-secondary">
           Track goal-sheet approvals and quarterly check-in completion across{" "}
@@ -286,7 +172,7 @@ export default async function CompletionPage({
 
       <SummaryCards rows={filteredRows} scopeLabel={scopeLabel} />
 
-      <CompletionFilters
+      <CompletionFiltersUI
         groups={filterGroups}
         basePath="/reports/completion"
         currentParams={currentParams}

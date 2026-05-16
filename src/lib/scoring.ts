@@ -42,6 +42,17 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
+// Arithmetic mean of raw (un-capped) per-goal scores.  Used by the
+// completion dashboard's average column so a goal scoring 102% pulls the
+// average above other under-target goals — capping each input at 100
+// before averaging would silently bury over-performance.  Individual
+// ScorePill banding still uses the clamped score (see ScoreResult.score),
+// so the display "102.2% (EXCEEDS)" for a single goal is unaffected.
+export function averageScore(rawScores: number[]): number | null {
+  if (rawScores.length === 0) return null;
+  return rawScores.reduce((a, b) => a + b, 0) / rawScores.length;
+}
+
 export function computeScore(input: ScoreInput): ScoreResult {
   switch (input.uomType) {
     case "MIN": {

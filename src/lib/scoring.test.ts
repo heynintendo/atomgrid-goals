@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { computeScore } from "./scoring";
+import { averageScore, computeScore } from "./scoring";
+
+describe("averageScore — un-capped mean for dashboard average", () => {
+  it("averages without capping any input at 1.0", () => {
+    // 0.24 + 0.333 + 1.022 = 1.595 → /3 = 0.5317; capping to 1.0 would
+    // give 0.5243 instead.
+    expect(averageScore([0.24, 0.333, 1.022])).toBeCloseTo(0.5317, 3);
+  });
+  it("returns null for an empty array", () => {
+    expect(averageScore([])).toBeNull();
+  });
+});
 
 describe("computeScore — MIN (higher is better)", () => {
   it("ratio < 1 → BELOW band, pct display", () => {
