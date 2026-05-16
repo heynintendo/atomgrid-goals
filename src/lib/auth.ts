@@ -76,3 +76,19 @@ export async function getDemoIdentities() {
     },
   });
 }
+
+// Full identity roster for the "More identities" submenu.  Returned sorted
+// by role (ADMIN → MANAGER → EMPLOYEE) then name so the submenu groups
+// cleanly without client-side bucketing.
+export async function getAllIdentities() {
+  return prisma.user.findMany({
+    orderBy: [{ role: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      department: { select: { name: true } },
+    },
+  });
+}
