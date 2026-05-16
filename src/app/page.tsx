@@ -152,10 +152,10 @@ export default function SandboxPage() {
                     {row.thrust}
                   </TableCell>
                   <TableCellNumeric>
-                    {row.actual.toLocaleString()}
+                    {row.actual.toLocaleString("en-IN")}
                   </TableCellNumeric>
                   <TableCellNumeric className="text-text-secondary">
-                    {row.target.toLocaleString()}
+                    {row.target.toLocaleString("en-IN")}
                   </TableCellNumeric>
                 </TableRow>
               ))}
