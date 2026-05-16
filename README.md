@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AtomGrid Goals
 
-## Getting Started
+AtomGrid Goals is a goal setting and tracking portal for organisations running an annual cycle with four quarterly check-ins. Employees own the draft of their goal sheet across thrust areas, managers approve and add structured feedback at each quarter, and admins govern the cycle, audit overrides, and shift the system clock when demoing across quarters.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 — App Router, React 19, Server Actions
+- TypeScript (strict)
+- Prisma 7 with the Neon serverless driver against Neon Postgres
+- Auth.js v5 — Microsoft Entra ID provider, plus a signed-cookie role-switcher for the demo
+- Tailwind v4 with `@theme` tokens, warm light single-mode
+- Radix UI primitives wrapped in a Lattice/Jira/Stripe-leaning design system
+- Recharts for analytics, Sonner for toasts
+- Vitest for unit tests, Playwright for e2e and screenshot capture
+
+## Local development
+
+Prerequisites: Node 20+ and pnpm 10.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env
+# fill in DATABASE_URL, DATABASE_URL_UNPOOLED, AUTH_SECRET, AUTH_URL
+pnpm db:push
+pnpm db:seed
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app boots on http://localhost:3000. The top-right dropdown carries three primary demo identities; pick any to populate the role-aware sidebar and switch context instantly.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Email          | Name          | Role     | Notes                                                |
+| -------------- | ------------- | -------- | ---------------------------------------------------- |
+| `emp@demo`     | Riya Sharma   | Employee | Approved sheet, Q1 check-in complete                  |
+| `mgr@demo`     | Karthik Iyer  | Manager  | Direct reports include Riya, Aditya, Neha, Sanjay     |
+| `admin@demo`   | Priya Nair    | Admin    | Governance, time-travel, audit log                    |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`More identities` in the dropdown exposes the rest of the seeded org — twelve employees and three managers across Sales, Engineering, and Operations.
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/(app)/          Authenticated route group — sidebar + header shell
+    employee/         Goal sheet editor and quarterly check-ins
+    manager/          Approval queue and team check-ins
+    admin/            Cycles, users, time-travel, unlock, audit log
+    reports/          Completion grid and analytics
+  components/         Composed UI surfaces
+  components/ui/      Primitives — Button, Input, Table, Dialog, Select, Sheet, DropdownMenu
+  lib/                Server helpers — auth, db, audit, scoring, system-date
+  lib/actions/        Server actions per surface
+  lib/validators/     Zod schemas shared between client forms and server actions
+prisma/               Schema, migrations, seed
+e2e/                  Playwright specs and screenshot automation
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm dev               # next dev with Turbopack
+pnpm build             # production build
+pnpm typecheck         # tsc --noEmit
 
-## Deploy on Vercel
+pnpm db:push           # apply schema to Neon without a migration
+pnpm db:migrate        # create and apply a new migration
+pnpm db:seed           # full seeded org with mixed sheet states
+pnpm db:reset          # drop everything, re-migrate, re-seed
+pnpm db:studio         # Prisma Studio against the configured Neon branch
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+pnpm screenshots       # capture every route across six identities and two viewports
+pnpm e2e               # run all Playwright specs
+pnpm e2e:ui            # Playwright's interactive runner
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Each screenshot run lands in `test-results/screenshots/<ISO timestamp>/<email-key>/<viewport>/<route>.png`, so visual diffs between iterations are kept side by side.

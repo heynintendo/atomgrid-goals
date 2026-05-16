@@ -2,6 +2,7 @@
   "name": "atomgrid-goals",
   "version": "0.1.0",
   "private": true,
+  "description": "Goal setting and tracking portal.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
