@@ -60,12 +60,18 @@ async function fetchAdityaSheetId(): Promise<string> {
 
 test.describe.configure({ mode: "serial" });
 
+// Bumped from the 60s default — capturing 28+ pages serially on first-run
+// Turbopack compile occasionally squeezes past 60s.
+test.setTimeout(180_000);
+
 test("screenshots", async ({ page }) => {
   const adityaSheetId = await fetchAdityaSheetId();
 
   const routes: Route[] = [
     { path: "/",                                          label: "home" },
     { path: "/employee/goal-sheet",                       label: "goal-sheet" },
+    { path: "/employee/check-ins",                        label: "check-ins-index" },
+    { path: "/employee/check-in/Q1",                      label: "check-in-q1" },
     { path: "/manager/approvals",                         label: "approvals",        roles: ["manager"] },
     { path: `/manager/approvals/${adityaSheetId}`,        label: "approval-review",  roles: ["manager"] },
     { path: "/admin/time-travel",                         label: "time-travel",      roles: ["admin"] },
@@ -81,7 +87,9 @@ test("screenshots", async ({ page }) => {
       for (const route of routes) {
         if (route.roles && !route.roles.includes(ident.role)) continue;
         await page.goto(route.path);
-        await page.waitForLoadState("networkidle");
+        // domcontentloaded is enough for static screenshots; networkidle was
+        // flaky in dev because Turbopack HMR keeps long-poll connections open.
+        await page.waitForLoadState("domcontentloaded");
         const dir = path.join(baseDir, ident.label, viewport.name);
         fs.mkdirSync(dir, { recursive: true });
         await page.screenshot({
