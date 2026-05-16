@@ -76,6 +76,8 @@ test("screenshots", async ({ page }) => {
     { path: `/manager/approvals/${adityaSheetId}`,        label: "approval-review",  roles: ["manager"] },
     { path: "/manager/check-ins?period=Q1",               label: "check-ins-q1",     roles: ["manager"] },
     { path: "/admin/time-travel",                         label: "time-travel",      roles: ["admin"] },
+    { path: "/admin/unlock",                              label: "admin-unlock",     roles: ["admin"] },
+    { path: "/admin/audit-log",                           label: "audit-log",        roles: ["admin"] },
   ];
 
   for (const ident of IDENTITIES) {
