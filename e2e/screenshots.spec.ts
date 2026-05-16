@@ -31,6 +31,7 @@ const IDENTITIES: Identity[] = [
 const ROUTES: Route[] = [
   { path: "/",                    label: "home" },
   { path: "/employee/goal-sheet", label: "goal-sheet" },
+  { path: "/manager/approvals",   label: "approvals-queue" },
 ];
 
 const VIEWPORTS = [

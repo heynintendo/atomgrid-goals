@@ -54,6 +54,9 @@ interface SidebarNavProps {
 export function SidebarNav({ role, onNavigate }: SidebarNavProps) {
   const pathname = usePathname();
   const sections = role ? NAV_BY_ROLE[role] : [];
+  // Longest-href-match wins so /manager/approvals lights up Approvals only,
+  // not its parent /manager.
+  const activeHref = pickActiveHref(pathname, sections);
 
   return (
     <>
@@ -71,7 +74,7 @@ export function SidebarNav({ role, onNavigate }: SidebarNavProps) {
                   <SidebarLink
                     key={item.href}
                     item={item}
-                    active={isActive(pathname, item.href)}
+                    active={item.href === activeHref}
                     onClick={onNavigate}
                   />
                 ))}
@@ -152,8 +155,23 @@ function EmptyState() {
   );
 }
 
-function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  if (pathname === href) return true;
-  return pathname.startsWith(`${href}/`);
+// Returns the href of the nav item that best matches the current pathname.
+// "Best" = longest href that's either exactly equal to pathname or a parent
+// prefix (joined by /).  This avoids /manager lighting up when on
+// /manager/approvals.
+function pickActiveHref(
+  pathname: string,
+  sections: { items: { href: string }[] }[],
+): string | null {
+  let best: string | null = null;
+  for (const section of sections) {
+    for (const item of section.items) {
+      const h = item.href;
+      const matches =
+        h === "/" ? pathname === "/" : pathname === h || pathname.startsWith(`${h}/`);
+      if (!matches) continue;
+      if (best == null || h.length > best.length) best = h;
+    }
+  }
+  return best;
 }
