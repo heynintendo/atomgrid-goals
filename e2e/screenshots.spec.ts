@@ -9,9 +9,14 @@ interface Route {
   roles: DemoRole[];
 }
 
-// Grows as H7+ features land.  Today the shell is the only landed surface.
+// Grows as H7+ features land.
 const ROUTES: Route[] = [
   { path: "/", label: "home", roles: ["employee", "manager", "admin"] },
+  {
+    path: "/employee/goal-sheet",
+    label: "goal-sheet",
+    roles: ["employee"], // Riya's seeded sheet is APPROVED — shows locked state
+  },
 ];
 
 const VIEWPORTS = [
