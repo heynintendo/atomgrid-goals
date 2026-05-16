@@ -68,6 +68,7 @@ test("screenshots", async ({ page }) => {
     { path: "/employee/goal-sheet",                       label: "goal-sheet" },
     { path: "/manager/approvals",                         label: "approvals",        roles: ["manager"] },
     { path: `/manager/approvals/${adityaSheetId}`,        label: "approval-review",  roles: ["manager"] },
+    { path: "/admin/time-travel",                         label: "time-travel",      roles: ["admin"] },
   ];
 
   for (const ident of IDENTITIES) {
