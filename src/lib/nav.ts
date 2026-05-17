@@ -57,6 +57,7 @@ export const NAV_BY_ROLE: Record<Role, NavSection[]> = {
       items: [
         { href: "/manager", label: "Overview", icon: LayoutDashboard },
         { href: "/manager/approvals", label: "Approvals", icon: ListChecks },
+        { href: "/manager/escalations", label: "Escalations", icon: AlertTriangle },
         { href: "/manager/check-ins", label: "Check-ins", icon: ClipboardCheck },
         { href: "/manager/shared-goals", label: "Shared goals", icon: Share2 },
       ],

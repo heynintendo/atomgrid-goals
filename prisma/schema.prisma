@@ -62,13 +62,19 @@ enum AuditAction {
   GOAL_RESTORED
   ADMIN_FORCE_APPROVE
   SHEET_UNLOCKED
+  ESCALATION_RESOLVED
 }
 
+// Escalation chain levels — the H17 engine only writes MANAGER (Level 1)
+// and SKIP_LEVEL (Level 2).  HR (L3) and EXECUTIVE (L4) are scaffolded
+// for future extension; EMPLOYEE is the "no escalation routed yet"
+// default state preserved from the original H3 schema.
 enum EscalationLevel {
   EMPLOYEE
   MANAGER
   SKIP_LEVEL
   HR
+  EXECUTIVE
 }
 
 enum EscalationStatus {
@@ -258,17 +264,34 @@ model EscalationRule {
 
 model EscalationEvent {
   id           String           @id @default(cuid())
-  ruleId       String
-  rule         EscalationRule   @relation(fields: [ruleId], references: [id])
+  // Optional rule reference — preserved from H3 so a future rules
+  // engine can drive cycles; the H17 cron job creates engine-managed
+  // rows without referencing a rule.
+  ruleId       String?
+  rule         EscalationRule?  @relation(fields: [ruleId], references: [id])
   targetUserId String
   targetUser   User             @relation("EscalationTarget", fields: [targetUserId], references: [id])
   currentLevel EscalationLevel  @default(EMPLOYEE)
   status       EscalationStatus @default(ACTIVE)
   triggeredAt  DateTime         @default(now())
   resolvedAt   DateTime?
+  // Cycle period this escalation is about (Q1 / Q2 / Q3 / ANNUAL).
+  // Nullable because legacy pre-H17 rows (seeded "goal sheet not
+  // submitted" escalations) aren't period-bound; the engine always
+  // writes a value on creation.
+  period       CheckInPeriod?
+  // Human-readable explanation surfaced in the admin table.  Kept
+  // separate from notifiedLog (which stays a JSON delivery log for
+  // H18 email tracking).
+  reason       String?
   notifiedLog  Json // [{ level, emailedAt, recipientId }]
   contextRef   String? // sheetId or checkInId
 
+  // Engine dedupe key — prevents the cron writing a duplicate row for
+  // the same (employee, period, level) tuple on repeated runs.  NULL
+  // periods (legacy rows) collide with nothing under Postgres NULL
+  // semantics, which is exactly what we want.
+  @@unique([targetUserId, period, currentLevel], name: "engine_dedupe")
   @@index([status])
   @@index([targetUserId])
 }

@@ -37,6 +37,7 @@ const ACTION_DOT: Record<AuditAction, string> = {
   GOAL_RESTORED:        "bg-status-on-track",
   ADMIN_FORCE_APPROVE:  "bg-warning",
   SHEET_UNLOCKED:       "bg-warning",
+  ESCALATION_RESOLVED:  "bg-brand",
 };
 
 export function AuditLogTable({ rows }: AuditLogTableProps) {

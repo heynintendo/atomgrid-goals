@@ -17,6 +17,7 @@ const ACTIONS: { value: AuditAction; label: string }[] = [
   { value: "GOAL_DELETED",         label: "Goal deleted" },
   { value: "GOAL_RESTORED",        label: "Goal restored" },
   { value: "ADMIN_FORCE_APPROVE",  label: "Force approve" },
+  { value: "ESCALATION_RESOLVED",  label: "Escalation resolved" },
 ];
 
 function parseAction(raw: string | undefined): AuditAction | null {

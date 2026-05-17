@@ -21,11 +21,15 @@ interface Route {
   roles?: RoleKey[];
 }
 
-// Six identities — three anointed demo users plus three more that exercise
-// specific goal-sheet states (Sanjay DRAFT 80%, Aditya SUBMITTED, Kavya fresh).
+// Seven identities — three anointed demo users (Priya/Karthik/Riya), three
+// more that exercise specific goal-sheet states (Sanjay DRAFT 80%, Aditya
+// SUBMITTED, Kavya fresh), and Vikram so the /manager/escalations route
+// captures both the empty (Karthik) and populated (Vikram, Kavya's manager)
+// states.
 const IDENTITIES: Identity[] = [
   { email: "admin@demo",  label: "admin-priya",      role: "admin" },
   { email: "mgr@demo",    label: "manager-karthik",  role: "manager" },
+  { email: "vikram@demo", label: "manager-vikram",   role: "manager" },
   { email: "emp@demo",    label: "employee-riya",    role: "employee" },
   { email: "sanjay@demo", label: "employee-sanjay",  role: "employee" },
   { email: "aditya@demo", label: "employee-aditya",  role: "employee" },
@@ -78,6 +82,8 @@ test("screenshots", async ({ page }) => {
     { path: "/admin/time-travel",                         label: "time-travel",      roles: ["admin"] },
     { path: "/admin/unlock",                              label: "admin-unlock",     roles: ["admin"] },
     { path: "/admin/audit-log",                           label: "audit-log",        roles: ["admin"] },
+    { path: "/admin/escalations",                         label: "admin-escalations",roles: ["admin"] },
+    { path: "/manager/escalations",                       label: "manager-escalations", roles: ["manager"] },
     { path: "/reports/completion?period=Q1",              label: "completion",       roles: ["admin", "manager"] },
     { path: "/reports/analytics?period=Q1&tab=qoq",       label: "analytics-qoq",    roles: ["admin", "manager"] },
   ];

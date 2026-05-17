@@ -619,17 +619,25 @@ async function main() {
       active: true,
     },
   });
+  // Kavya's L1 is intentionally set to triggeredAt = 8 days ago in real
+  // time so the very first cron run after seed (live demo) promotes
+  // her row to L2 (SKIP_LEVEL).  The seed is otherwise deterministic;
+  // this is the one line that's time-sensitive on purpose so judges
+  // see the full L1 → L2 lifecycle without driving time-travel.
+  const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
   await prisma.escalationEvent.create({
     data: {
       ruleId: submissionRule.id,
       targetUserId: kavya.id,
-      currentLevel: EscalationLevel.EMPLOYEE,
+      period: "Q1",
+      currentLevel: EscalationLevel.MANAGER,
       status: EscalationStatus.ACTIVE,
-      triggeredAt: new Date("2026-05-15"),
+      triggeredAt: eightDaysAgo,
+      reason: "Q1 check-in not submitted by deadline (window closed 2026-10-01)",
       notifiedLog: [
         {
-          level: "EMPLOYEE",
-          emailedAt: new Date("2026-05-15T09:00:00Z").toISOString(),
+          level: "MANAGER",
+          emailedAt: eightDaysAgo.toISOString(),
           recipientId: kavya.id,
         },
       ],
