@@ -42,14 +42,29 @@ export function verify(signed: string): string | null {
 }
 
 // Server helper — every route group calls this to identify the current
-// actor.  Currently reads only the demo cookie; H19 will fold in the
-// Auth.js (Entra ID) session so both paths converge on this return value.
+// actor.  Tries the demo HMAC cookie first (primary path for judges
+// using the role-switcher), falls back to the Auth.js JWT session
+// (the H19 Microsoft Entra ID SSO path).  Both paths converge on the
+// same User row so the rest of the app is auth-agnostic.
 export async function getCurrentUser() {
   const store = await cookies();
   const cookie = store.get(DEMO_COOKIE);
-  if (!cookie?.value) return null;
 
-  const userId = verify(cookie.value);
+  let userId: string | null = null;
+  if (cookie?.value) {
+    userId = verify(cookie.value);
+  }
+
+  if (!userId) {
+    // Lazy import — Auth.js's `auth()` pulls in next-auth (and the
+    // Microsoft provider) at module-load time, which is the wrong
+    // tradeoff for every server component that just wants the demo
+    // identity.  Only pay that cost when the demo cookie is absent.
+    const { auth } = await import("@/auth");
+    const session = await auth();
+    if (session?.userId) userId = session.userId;
+  }
+
   if (!userId) return null;
 
   return prisma.user.findUnique({
