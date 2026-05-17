@@ -43,7 +43,11 @@ export async function saveManagerComment(
           sheet: {
             select: {
               owner: {
-                select: { name: true, managerId: true },
+                select: {
+                  name: true,
+                  managerId: true,
+                  manager: { select: { name: true } },
+                },
               },
             },
           },
@@ -72,21 +76,51 @@ export async function saveManagerComment(
     },
   });
 
-  // Post-commit email — only when the manager added a real comment
-  // (not when they're clearing one).  The employee sees the verbatim
-  // comment so they can act without opening the app first.
+  // Post-commit email — only when a real comment was added (skipped
+  // when the manager clears one).  Manager-commenter notifies just the
+  // employee.  Admin-commenter fans out: employee directly + their
+  // manager for transparency.
   if (!clearing) {
-    await sendEmail({
-      kind:    "manager-comment",
-      subject: `${user.name} left feedback on your ${PERIOD_LABEL[checkIn.period]} check-in`,
-      react:   ManagerCommentEmail({
-        employeeName: checkIn.goal.sheet.owner.name,
-        managerName:  user.name,
-        period:       PERIOD_LABEL[checkIn.period],
-        goalTitle:    checkIn.goal.title,
-        comment:      trimmed,
+    const periodLabel  = PERIOD_LABEL[checkIn.period];
+    const commenterRole = user.role === Role.ADMIN ? "ADMIN" : "MANAGER";
+    const employeeName  = checkIn.goal.sheet.owner.name;
+    const reportManager = checkIn.goal.sheet.owner.manager?.name ?? null;
+
+    const sends: Promise<unknown>[] = [
+      sendEmail({
+        kind:    `manager-comment-employee-${commenterRole.toLowerCase()}`,
+        subject: `${commenterRole === "ADMIN" ? "Admin " : ""}${user.name} left feedback on your ${periodLabel} check-in`,
+        react:   ManagerCommentEmail({
+          audience:      "employee",
+          commenterRole,
+          commenterName: user.name,
+          employeeName,
+          managerName:   reportManager,
+          period:        periodLabel,
+          goalTitle:     checkIn.goal.title,
+          comment:       trimmed,
+        }),
       }),
-    });
+    ];
+
+    if (commenterRole === "ADMIN" && reportManager) {
+      sends.push(sendEmail({
+        kind:    "manager-comment-manager-cc",
+        subject: `Admin feedback on ${employeeName}'s ${periodLabel} check-in`,
+        react:   ManagerCommentEmail({
+          audience:      "manager",
+          commenterRole,
+          commenterName: user.name,
+          employeeName,
+          managerName:   reportManager,
+          period:        periodLabel,
+          goalTitle:     checkIn.goal.title,
+          comment:       trimmed,
+        }),
+      }));
+    }
+
+    await Promise.allSettled(sends);
   }
 
   revalidatePath("/manager/check-ins");

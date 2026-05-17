@@ -35,7 +35,13 @@ export async function unlockSheet(raw: unknown): Promise<ActionResult> {
   const sheet = await prisma.goalSheet.findUnique({
     where: { id: parsed.data.sheetId },
     include: {
-      owner: { select: { name: true, email: true } },
+      owner: {
+        select: {
+          name: true,
+          email: true,
+          manager: { select: { name: true } },
+        },
+      },
       cycle: { select: { name: true } },
     },
   });
@@ -80,17 +86,40 @@ export async function unlockSheet(raw: unknown): Promise<ActionResult> {
     };
   }
 
-  // Post-commit email — sheet UNLOCKED notice with the audited reason.
-  await sendEmail({
-    kind:    "sheet-unlocked",
-    subject: `${user.name} unlocked your ${sheet.cycle.name} goal sheet`,
-    react:   SheetUnlockedEmail({
-      employeeName: sheet.owner.name,
-      adminName:    user.name,
-      cycleName:    sheet.cycle.name,
-      reason:       parsed.data.reason,
+  // Post-commit email fan-out — employee (action: revise + resubmit)
+  // and their manager (heads-up: expect a fresh approval cycle).
+  // Promise.allSettled isolates a Resend hiccup on one send from the
+  // other; sendEmail itself swallows failures internally, layered.
+  const managerName = sheet.owner.manager?.name ?? null;
+  const sends: Promise<unknown>[] = [
+    sendEmail({
+      kind:    "sheet-unlocked-employee",
+      subject: `${user.name} unlocked your ${sheet.cycle.name} goal sheet`,
+      react:   SheetUnlockedEmail({
+        audience:    "employee",
+        employeeName: sheet.owner.name,
+        managerName,
+        adminName:    user.name,
+        cycleName:    sheet.cycle.name,
+        reason:       parsed.data.reason,
+      }),
     }),
-  });
+  ];
+  if (managerName) {
+    sends.push(sendEmail({
+      kind:    "sheet-unlocked-manager",
+      subject: `${sheet.owner.name}'s ${sheet.cycle.name} goal sheet was unlocked`,
+      react:   SheetUnlockedEmail({
+        audience:    "manager",
+        employeeName: sheet.owner.name,
+        managerName,
+        adminName:    user.name,
+        cycleName:    sheet.cycle.name,
+        reason:       parsed.data.reason,
+      }),
+    }));
+  }
+  await Promise.allSettled(sends);
 
   revalidatePath("/admin/unlock");
   revalidatePath("/admin/audit-log");
