@@ -71,10 +71,16 @@ export function ActivityFeed({ rows, title, emptyHint }: ActivityFeedProps) {
                       {r.reason}
                     </p>
                   ) : null}
-                  <p className="mt-0.5 font-mono text-[11px] text-text-tertiary tabular-nums" suppressHydrationWarning>
-                    {formatRelative(r.createdAt)}
-                  </p>
                 </div>
+                {/* Right-justified timestamp.  Bumped from 11px text-
+                    tertiary to 12px text-secondary so it reads as a
+                    deliberate metadata anchor rather than visual debris. */}
+                <span
+                  className="shrink-0 self-start whitespace-nowrap pt-0.5 font-mono text-xs tabular-nums text-text-secondary"
+                  suppressHydrationWarning
+                >
+                  {formatRelative(r.createdAt)}
+                </span>
               </li>
             );
           })}

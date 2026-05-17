@@ -58,9 +58,13 @@ export function PerGoalProgress({ bars, periodLabel, className }: PerGoalProgres
     );
   }
 
+  // 12-char limit inside the chart context — at 375px viewport the
+  // YAxis label column collapses 28-char labels to "..." ellipses.
+  // 12 keeps mobile readable; full title still shows in the hover
+  // tooltip card so the meaning isn't lost on desktop either.
   const rows = bars.map((b) => ({
     ...b,
-    label: truncate(b.title, 28),
+    label: truncate(b.title, 12),
     valuePct: Math.round(b.progress * 100),
   }));
 
@@ -94,7 +98,12 @@ export function PerGoalProgress({ bars, periodLabel, className }: PerGoalProgres
               tick={{ fontSize: 11, fill: "var(--color-text-muted)" }}
               tickLine={false}
               axisLine={false}
-              width={170}
+              // Narrowed from 170px → 110px to match the 12-char label
+              // limit above.  At 11px font ~7px per char + ellipsis +
+              // breathing room ≈ 100px; 110 gives a clean ~10px gutter.
+              // Hands the freed pixels to the bar tracks, which now
+              // read clearly on 375px mobile.
+              width={110}
             />
             <Tooltip content={<TooltipCard />} cursor={false} />
             <Bar dataKey="valuePct" radius={[0, 4, 4, 0]} isAnimationActive={false} maxBarSize={20}>

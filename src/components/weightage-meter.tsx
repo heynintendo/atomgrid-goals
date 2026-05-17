@@ -58,8 +58,12 @@ export function WeightageMeter({ sum, goalCount, status }: WeightageMeterProps) 
             {sum}%
           </span>
         </div>
+        {/* Just the raw count — dropping the "/8" denominator that
+            wasn't explained anywhere on the page and read as ambiguous.
+            The 8-goal sheet ceiling is enforced at the add-goal button
+            (disabled at goalCount === 8) where the context is clear. */}
         <span className="font-mono text-xs text-text-muted tabular-nums">
-          {goalCount}/8 goals
+          {goalCount} {goalCount === 1 ? "goal" : "goals"}
         </span>
       </div>
       <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-2">

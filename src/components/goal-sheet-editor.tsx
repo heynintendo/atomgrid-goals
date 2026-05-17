@@ -315,16 +315,31 @@ function SubmittedBanner() {
 }
 
 function LockedBanner({ approved }: { approved: boolean }) {
+  // Approved → 1px brand-primary left edge + subtle lime tint so the
+  // banner announces "approved" via colour rather than reading as
+  // another grey card.  Matches the sidebar active-row pattern from
+  // H20.  Pure-locked (rare today, no UI surfaces it post-approval)
+  // keeps a neutral surface so the visual language stays calm.
   return (
-    <div className="rounded-lg border border-border bg-surface-2 p-4">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-lg border p-4",
+        approved
+          ? "border-brand-primary/40 bg-brand-primary-subtle"
+          : "border-border bg-surface-2",
+      )}
+    >
+      {approved ? (
+        <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-brand-primary" />
+      ) : null}
       <div className="flex items-start gap-3">
         {approved ? (
-          <CheckCircle2 size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-status-on-track" />
+          <CheckCircle2 size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-brand-navy" />
         ) : (
           <Lock size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-text-muted" />
         )}
         <div>
-          <p className="text-sm font-medium text-text">
+          <p className="text-sm font-semibold text-brand-navy">
             {approved
               ? "Approved — sheet is locked"
               : "Sheet is locked"}
