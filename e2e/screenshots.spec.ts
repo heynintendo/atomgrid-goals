@@ -79,6 +79,7 @@ test("screenshots", async ({ page }) => {
     { path: "/admin/unlock",                              label: "admin-unlock",     roles: ["admin"] },
     { path: "/admin/audit-log",                           label: "audit-log",        roles: ["admin"] },
     { path: "/reports/completion?period=Q1",              label: "completion",       roles: ["admin", "manager"] },
+    { path: "/reports/analytics?period=Q1&tab=qoq",       label: "analytics-qoq",    roles: ["admin", "manager"] },
   ];
 
   for (const ident of IDENTITIES) {

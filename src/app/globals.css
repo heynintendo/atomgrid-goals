@@ -30,6 +30,17 @@
   --color-danger:               #B91C1C;
   --color-info:                 #1D4ED8;
 
+  /* ─────────────────────────  CHART PALETTE  ───────────────────────────── */
+  /* Categorical chart colours.  Desaturated, Lattice/Stripe-leaning, all
+     readable on the warm-light canvas at --color-canvas.  Reds and ambers
+     stay reserved for semantic status (danger, warning) — so none of these
+     three hues collide with the meaning of those.  Stable mapping to
+     manager teams lives in src/lib/analytics-colors.ts so the next person
+     touching this doesn't reshuffle the assignment. */
+  --color-chart-1:              var(--color-brand);  /* emerald  #0F5132 */
+  --color-chart-2:              #475569;             /* slate blue */
+  --color-chart-3:              #7E22CE;             /* violet */
+
   /* ─────────────────────────  TYPOGRAPHY  ──────────────────────────────── */
   --font-sans:                  var(--font-geist-sans), system-ui, sans-serif;
   --font-mono:                  var(--font-geist-mono), ui-monospace, monospace;
