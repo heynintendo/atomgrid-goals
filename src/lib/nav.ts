@@ -1,18 +1,13 @@
 import {
   AlertTriangle,
   BarChart3,
-  Calendar,
   ClipboardCheck,
   Clock,
-  Compass,
   KeyRound,
   LayoutDashboard,
   ListChecks,
   ScrollText,
-  Share2,
   Target,
-  UserCog,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 import type { Role } from "@prisma/client";
@@ -32,8 +27,14 @@ export type NavSection = {
   items: NavItem[];
 };
 
-// Single source of truth for sidebar nav.  Routes that don't yet exist fall
-// through to the (app)/[...slug] catch-all stub until H7+ builds them out.
+// Single source of truth for sidebar nav.  Every visible entry must
+// point at a route with a real page.tsx (no catch-all placeholders).
+// The principle: visible-and-broken is worse than missing-from-nav.
+//
+// Placeholder routes (Cycles, Users, Thrust areas, Shared goals) still
+// resolve via the (app)/[...slug] catch-all when a dev types the URL
+// directly — but the sidebar doesn't surface them so judges never
+// land on a "COMING SOON" screen during the demo walk.
 export const NAV_BY_ROLE: Record<Role, NavSection[]> = {
   EMPLOYEE: [
     {
@@ -61,7 +62,6 @@ export const NAV_BY_ROLE: Record<Role, NavSection[]> = {
         { href: "/manager/approvals", label: "Approvals", icon: ListChecks },
         { href: "/manager/escalations", label: "Escalations", icon: AlertTriangle },
         { href: "/manager/check-ins", label: "Check-ins", icon: ClipboardCheck },
-        { href: "/manager/shared-goals", label: "Shared goals", icon: Share2 },
       ],
     },
     {
@@ -77,10 +77,6 @@ export const NAV_BY_ROLE: Record<Role, NavSection[]> = {
       label: "Org",
       items: [
         { href: "/admin", label: "Overview", icon: LayoutDashboard },
-        { href: "/admin/cycles", label: "Cycles", icon: Calendar },
-        { href: "/admin/users", label: "Users", icon: UserCog },
-        { href: "/admin/thrust-areas", label: "Thrust areas", icon: Compass },
-        { href: "/admin/shared-goals", label: "Shared goals", icon: Share2 },
       ],
     },
     {

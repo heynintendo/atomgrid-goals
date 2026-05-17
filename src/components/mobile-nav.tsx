@@ -14,9 +14,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 //
 // Closes itself on route change (subscribing to usePathname()) so the
 // drawer doesn't linger over the destination page after the user picks
-// a nav item.  Sheet primitive supplies Esc + backdrop-click close.
-// The Sheet wrapper (in ui/sheet.tsx) pauses Lenis while the drawer is
-// open so the background doesn't scroll on wheel.
+// a nav item.  Sheet primitive supplies Esc + backdrop-click close,
+// plus Radix's body scroll lock keeps the page from scrolling behind
+// the open drawer.
 export function MobileNav({ role }: { role: Role | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
