@@ -67,40 +67,39 @@ export function BrandLayout({
           }}
         >
           <Section style={{ marginBottom: 24 }}>
-            <div
-              style={{
-                display:        "inline-block",
-                width:          8,
-                height:         8,
-                backgroundColor: COLORS.brand,
-                borderRadius:    2,
-                verticalAlign:   "middle",
-              }}
-            />
-            <span
-              style={{
-                fontWeight:    600,
-                fontSize:      16,
-                marginLeft:    8,
-                color:         COLORS.text,
-                verticalAlign: "middle",
-              }}
-            >
-              AtomGrid
-            </span>
-            <span
-              style={{
-                fontFamily:    "ui-monospace, SFMono-Regular, Menlo, monospace",
-                fontSize:      11,
-                letterSpacing: "0.08em",
-                marginLeft:    6,
-                color:         COLORS.textFaint,
-                textTransform: "uppercase",
-                verticalAlign: "middle",
-              }}
-            >
-              Goals
-            </span>
+            {/* Logo + "Goals" sub-label.  AtomGrid wordmark is the
+                public-served SVG so email clients (most of which load
+                external images) can render the brand mark.  Alt text
+                falls back to the AtomGrid text for image-blocked
+                clients. */}
+            <table cellPadding={0} cellSpacing={0} style={{ borderCollapse: "collapse" }}>
+              <tbody>
+                <tr>
+                  <td style={{ verticalAlign: "middle", paddingRight: 10 }}>
+                    <img
+                      src="https://atomgrid-goals.vercel.app/atomgrid-logo.svg"
+                      alt="AtomGrid"
+                      width={140}
+                      height={26}
+                      style={{ display: "block" }}
+                    />
+                  </td>
+                  <td style={{ verticalAlign: "middle" }}>
+                    <span
+                      style={{
+                        fontFamily:    "ui-monospace, SFMono-Regular, Menlo, monospace",
+                        fontSize:      11,
+                        letterSpacing: "0.12em",
+                        color:         COLORS.textFaint,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Goals
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </Section>
 
           <Text

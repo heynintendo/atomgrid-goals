@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Logo } from "@/components/brand/logo";
 import { LoginActions } from "@/components/login-actions";
 import { getCurrentUser, getDemoIdentities } from "@/lib/auth";
 
@@ -15,17 +16,17 @@ export default async function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-canvas p-8">
       <div className="w-full max-w-md space-y-8">
-        <header className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-sm bg-brand" />
-            <span className="text-base font-semibold tracking-tight text-text">
-              AtomGrid
-            </span>
-            <span className="font-mono text-xs uppercase tracking-wider text-text-muted">
+        <header className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Logo size={36} />
+            <span
+              aria-hidden
+              className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-muted"
+            >
               Goals
             </span>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-text">
+          <h1 className="text-3xl font-semibold tracking-tight">
             Sign in
           </h1>
           <p className="text-sm text-text-secondary">

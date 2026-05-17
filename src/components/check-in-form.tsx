@@ -251,7 +251,10 @@ function CheckInGoalRow({
       </div>
 
       <div className="space-y-1">
-        <h3 className="text-base font-semibold text-text">{goal.title}</h3>
+        {/* h2 — each goal article is a top-level section under the
+            page's H1.  Was H3 which triggered an axe-core heading-
+            order skip warning (H1 → H3 with no H2 between). */}
+        <h2 className="text-base font-semibold text-text">{goal.title}</h2>
         {goal.description && (
           <p className="text-sm text-text-secondary">{goal.description}</p>
         )}
@@ -432,7 +435,7 @@ function ToggleOption({
       <span
         className={cn(
           "block text-xs",
-          active ? "text-brand" : "text-text-muted",
+          active ? "text-brand-navy" : "text-text-muted",
         )}
       >
         {sub}

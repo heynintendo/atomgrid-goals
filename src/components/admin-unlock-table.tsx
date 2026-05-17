@@ -96,7 +96,9 @@ export function AdminUnlockTable({
               <TableHead>Status</TableHead>
               <TableHead>Approved</TableHead>
               <TableHead>Approver</TableHead>
-              <TableHead className="w-32 text-right" aria-label="Unlock" />
+              <TableHead className="w-32 text-right">
+                <span className="sr-only">Unlock action</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

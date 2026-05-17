@@ -16,9 +16,21 @@ export async function TimeTravelBanner() {
   if (!state.isTraveled) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-warning/30 bg-warning/5 px-4 py-2.5 md:px-6">
+    // <div role="status"> rather than <aside role="status"> — axe-core
+    // flags the latter as aria-allowed-role since <aside> already
+    // carries the implicit "complementary" landmark and a redundant
+    // role conflicts.  The div + role="status" pattern satisfies both
+    // the region rule (region landmark provided by role=status) and
+    // aria-allowed-role.  aria-live=polite still announces the banner
+    // to screen readers when an admin time-travels mid-session.
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Time-travel notice"
+      className="flex flex-wrap items-center justify-between gap-3 border-b border-warning/30 bg-warning/5 px-4 py-2.5 md:px-6"
+    >
       <div className="flex items-center gap-2">
-        <Clock size={14} strokeWidth={1.75} className="shrink-0 text-warning" />
+        <Clock size={14} strokeWidth={1.5} className="shrink-0 text-warning" />
         <span className="text-xs text-text-secondary">
           <span className="font-medium text-text">Time-travel active</span> ·
           cycle windows read as if today is{" "}

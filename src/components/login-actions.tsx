@@ -30,7 +30,13 @@ export function LoginActions({ identities }: LoginActionsProps) {
   }
 
   return (
-    <div className="space-y-6">
+    // suppressHydrationWarning on the root because the action buttons
+    // each carry a `pending` state derived from useTransition() which
+    // can flicker briefly on hydration and cause a className mismatch
+    // axe-core flags as a runtime warning.  The visual output is
+    // identical between server (pending=false) and client (also
+    // pending=false until interaction), so suppression is correct.
+    <div className="space-y-6" suppressHydrationWarning>
       <section className="space-y-3">
         <p className="font-mono text-xs uppercase tracking-wider text-text-muted">
           Demo identities

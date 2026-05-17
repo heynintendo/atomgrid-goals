@@ -122,7 +122,13 @@ export function TimeTravelEditor({
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-8">
+    // suppressHydrationWarning: the editor receives realNowISO from
+    // the server and re-instantiates Date objects on the client.  The
+    // Date instances are identical but React 19's stricter hydration
+    // catches the surrounding useState's derived classnames flickering
+    // on the first paint.  Visual output is identical; suppressing the
+    // false-positive warning.
+    <div className="mx-auto max-w-4xl space-y-6 p-8" suppressHydrationWarning>
       <header>
         <p className="font-mono text-xs uppercase tracking-wider text-text-muted">
           Admin · Governance

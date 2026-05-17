@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@prisma/client";
+import { Logo } from "@/components/brand/logo";
 import { NAV_BY_ROLE, ROLE_DESCRIPTIONS, type NavItem } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +15,7 @@ interface SidebarProps {
 // MobileNav, which renders <SidebarNav> inside a Sheet.
 export function Sidebar({ role }: SidebarProps) {
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-surface-1 md:flex">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-surface-1 lg:flex">
       <BrandMark />
       <SidebarNav role={role} />
     </aside>
@@ -27,16 +28,15 @@ export function BrandMark({ className }: { className?: string }) {
   return (
     <Link
       href="/"
+      aria-label="AtomGrid Goals — home"
       className={cn(
-        "flex h-14 items-center gap-2 border-b border-border px-4",
+        "flex h-14 items-center gap-3 border-b border-border px-4",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2",
         className,
       )}
     >
-      <span className="h-2 w-2 rounded-sm bg-brand" />
-      <span className="text-base font-semibold tracking-tight text-text">
-        AtomGrid
-      </span>
-      <span className="ml-1 font-mono text-xs uppercase tracking-wider text-text-muted">
+      <Logo size={26} />
+      <span aria-hidden className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-muted">
         Goals
       </span>
     </Link>
@@ -114,26 +114,31 @@ function SidebarLink({
       href={item.href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
+      // active is derived from usePathname() which only resolves on
+      // the client.  Server renders every link as inactive, then
+      // client re-renders with one active — that's a React 19
+      // hydration warning we don't want spamming the console.
+      // suppressHydrationWarning here scopes the suppression to the
+      // exact attribute that legitimately differs (className), not
+      // the surrounding tree.
+      suppressHydrationWarning
       className={cn(
-        "group flex h-8 items-center gap-2 rounded-sm pl-2 pr-3 text-sm transition-colors duration-[120ms] ease-[var(--ease-brand)]",
+        // 2px brand-primary left edge on active state per H20.D8 spec;
+        // negative margin keeps the label text-position constant
+        // between active / inactive so the row doesn't shift.
+        "group relative flex h-9 items-center gap-2.5 rounded-md pl-3 pr-3 text-sm transition-colors duration-100 ease-[var(--ease-brand)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
         active
-          ? "bg-surface-hover text-text"
-          : "text-text-secondary hover:bg-surface-hover hover:text-text",
+          ? "bg-brand-primary-subtle text-text-heading font-semibold before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-r-sm before:bg-brand-primary"
+          : "text-text-secondary font-medium hover:bg-surface-hover hover:text-text",
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          "h-1.5 w-1.5 shrink-0 rounded-full",
-          active ? "bg-brand" : "bg-transparent",
-        )}
-      />
       <Icon
-        size={14}
-        strokeWidth={1.75}
+        size={16}
+        strokeWidth={1.5}
         className={cn(
           "shrink-0",
-          active ? "text-text" : "text-text-muted group-hover:text-text",
+          active ? "text-text-heading" : "text-text-muted group-hover:text-text",
         )}
       />
       <span className="truncate">{item.label}</span>

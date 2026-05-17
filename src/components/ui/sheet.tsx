@@ -5,7 +5,28 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const Sheet = DialogPrimitive.Root;
+// Same Lenis hook as the Dialog primitive — when a side-sheet opens,
+// stop smooth-scroll so the page behind the overlay doesn't scroll on
+// wheel.  Resume on close.
+interface LenisLike { stop: () => void; start: () => void }
+type LenisWindow = Window & { __lenis?: LenisLike };
+type SheetRootProps = React.ComponentProps<typeof DialogPrimitive.Root>;
+
+function Sheet({ onOpenChange, ...props }: SheetRootProps) {
+  const handleOpenChange = React.useCallback(
+    (open: boolean) => {
+      if (typeof window !== "undefined") {
+        const lenis = (window as LenisWindow).__lenis;
+        if (open) lenis?.stop();
+        else      lenis?.start();
+      }
+      onOpenChange?.(open);
+    },
+    [onOpenChange],
+  );
+  return <DialogPrimitive.Root onOpenChange={handleOpenChange} {...props} />;
+}
+
 const SheetTrigger = DialogPrimitive.Trigger;
 const SheetClose = DialogPrimitive.Close;
 const SheetPortal = DialogPrimitive.Portal;

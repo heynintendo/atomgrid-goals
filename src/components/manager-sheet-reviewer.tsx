@@ -233,7 +233,9 @@ function ReviewGoalCard({ index, goal, register }: ReviewGoalCardProps) {
       </div>
 
       <div className="space-y-1">
-        <h3 className="text-base font-semibold text-text">{goal.title}</h3>
+        {/* h2 per goal — matches check-in-form's heading rank so the
+            page hierarchy stays consistent: page H1 → goal H2. */}
+        <h2 className="text-base font-semibold text-text">{goal.title}</h2>
         {goal.description && (
           <p className="text-sm text-text-secondary">{goal.description}</p>
         )}

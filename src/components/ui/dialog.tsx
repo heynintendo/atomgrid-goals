@@ -5,7 +5,38 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const Dialog = DialogPrimitive.Root;
+// Type augmentation so TypeScript sees the global Lenis handle the
+// SmoothScrollProvider attaches.  Defined here rather than a global .d.ts
+// because dialog.tsx is the only consumer that needs it today.
+interface LenisLike {
+  stop:  () => void;
+  start: () => void;
+}
+type LenisWindow = Window & { __lenis?: LenisLike };
+
+// Wrapped Dialog Root that pauses Lenis smooth-scroll while open so
+// the background page doesn't scroll behind the modal backdrop on
+// wheel.  Without this hook, Lenis intercepts wheel events on body
+// regardless of Radix's focus trap.  Falls through to native
+// document scroll-lock when Lenis isn't loaded (e.g. SSR snapshot
+// before hydration, or below the smoothWheel viewport breakpoint).
+type DialogRootProps = React.ComponentProps<typeof DialogPrimitive.Root>;
+
+function Dialog({ onOpenChange, ...props }: DialogRootProps) {
+  const handleOpenChange = React.useCallback(
+    (open: boolean) => {
+      if (typeof window !== "undefined") {
+        const lenis = (window as LenisWindow).__lenis;
+        if (open) lenis?.stop();
+        else      lenis?.start();
+      }
+      onOpenChange?.(open);
+    },
+    [onOpenChange],
+  );
+  return <DialogPrimitive.Root onOpenChange={handleOpenChange} {...props} />;
+}
+
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;

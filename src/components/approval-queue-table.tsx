@@ -61,7 +61,9 @@ export function ApprovalQueueTable({ rows }: ApprovalQueueTableProps) {
           <TableHead>Submitted</TableHead>
           <TableHead className="text-right">Goals</TableHead>
           <TableHead className="text-right">Weightage</TableHead>
-          <TableHead className="w-12 text-right" aria-label="Open" />
+          <TableHead className="w-12 text-right">
+            <span className="sr-only">Open sheet</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

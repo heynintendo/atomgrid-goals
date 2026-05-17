@@ -88,7 +88,9 @@ export function ManagerCheckInsTable({
             <TableHead>Score</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Comment</TableHead>
-            <TableHead className="w-12 text-right" aria-label="Open" />
+            <TableHead className="w-12 text-right">
+              <span className="sr-only">Open check-in</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

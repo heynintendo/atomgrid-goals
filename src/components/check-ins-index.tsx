@@ -114,7 +114,7 @@ function PeriodCardView({
               strokeWidth={1.75}
               className={cn(
                 state === "active"
-                  ? "text-brand"
+                  ? "text-brand-navy"
                   : state === "past"
                     ? "text-text-muted"
                     : "text-warning",
@@ -145,7 +145,7 @@ function PeriodCardView({
         <span
           className={cn(
             "inline-flex items-center gap-1 text-xs font-medium",
-            state === "active" && !disabled ? "text-brand" : "text-text-muted",
+            state === "active" && !disabled ? "text-brand-navy" : "text-text-muted",
           )}
         >
           {ctaLabel}

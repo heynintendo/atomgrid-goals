@@ -232,10 +232,15 @@ function FilterChipGroup<T extends string>({
               type="button"
               onClick={() => onChange(opt.value)}
               className={cn(
-                "rounded-sm border px-2 py-1 text-xs transition-colors duration-[120ms]",
+                // h-7 = 28px (audit's smallest allowed control height).
+                // Bumped from py-1 which rendered as 26px — Phase E
+                // flagged the 2px shortfall as the only real token
+                // height defect after audit-script noise was cleared.
+                "inline-flex h-7 items-center rounded-md border px-2.5 text-xs font-medium transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30 focus-visible:ring-offset-1",
                 active
-                  ? "border-brand bg-brand/[0.06] text-text"
-                  : "border-border bg-surface-1 text-text-secondary hover:bg-surface-hover",
+                  ? "border-brand-primary bg-brand-primary-subtle text-text"
+                  : "border-border bg-surface-1 text-text-secondary hover:border-border-hover hover:bg-surface-hover",
               )}
             >
               {opt.label}

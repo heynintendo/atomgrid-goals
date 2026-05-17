@@ -1,82 +1,158 @@
 @import "tailwindcss";
 
 @theme {
-  /* ─────────────────────────  CANVAS / SURFACES  ───────────────────────── */
-  --color-canvas:               #FBFAF7;
+  /* ─────────────────────────  ATOMGRID BRAND  ───────────────────────────────
+     Extracted from atomgrid.in via e2e/brand-recon.spec.ts on 2026-05-17.
+     Two greens are intentional: the logo mark is slightly darker than the
+     CTA bg — both kept as separate tokens so the SVG can stay self-contained
+     while UI consumers use `--brand-primary`.
+
+     Critical contrast rule: text on `--brand-primary` is dark navy
+     (`--text-on-primary`), never white.  Lime green vs white fails AA.   */
+  --color-brand-primary:        #A4D845;   /* CTA background, active accent       */
+  --color-brand-primary-hover:  #93C53B;   /* derived — 6% darker for hover state */
+  --color-brand-primary-active: #82B233;   /* derived — pressed state             */
+  --color-brand-primary-subtle: rgba(164, 216, 69, 0.10);
+  --color-brand-logo:           #94C240;   /* embedded in logo SVG only           */
+  --color-brand-navy:           #23416F;   /* hero gradient + footer wrapper      */
+  --color-brand-navy-hover:     #1E3962;
+  --color-brand-navy-subtle:    rgba(35, 65, 111, 0.08);
+
+  /* ─────────────────────────  SURFACES  ─────────────────────────────────────
+     Light-mode only.  `--color-canvas` is off-white per Linear / Vercel
+     conventions — pure white feels clinical for a data-dense surface.       */
+  --color-canvas:               #FAFAFA;
   --color-surface-1:            #FFFFFF;
-  --color-surface-2:            #F5F3EE;
-  --color-surface-hover:        #F0EDE6;
+  --color-surface-2:            #F5F5F4;   /* table headers, code blocks  */
+  --color-surface-hover:        #F0F0EE;
+  --color-surface-raised:       #FFFFFF;   /* cards on canvas — same hex; depth via shadow */
+  --color-surface-navy:         var(--color-brand-navy);
+  --color-overlay:              rgba(15, 23, 42, 0.55);  /* modal scrim    */
 
-  /* ─────────────────────────  BORDERS  ─────────────────────────────────── */
-  --color-border:               #E8E5DF;
-  --color-border-hover:         #D4D0C8;
-  --color-border-strong:        #A8A39A;
+  /* ─────────────────────────  BORDERS  ──────────────────────────────────── */
+  --color-border-subtle:        #EAEAEA;   /* within-card separation       */
+  --color-border:               #E5E5E5;   /* cards, inputs (default)      */
+  --color-border-hover:         #D4D4D4;
+  --color-border-strong:        #A3A3A3;   /* rare emphasis                */
+  --color-border-focus:         var(--color-brand-primary);
 
-  /* ─────────────────────────  TEXT  ────────────────────────────────────── */
-  --color-text:                 #1A1A1A;
-  --color-text-secondary:       #54514B;
-  --color-text-muted:           #8A8680;
-  --color-text-placeholder:     #A8A39A;
+  /* ─────────────────────────  TEXT  ─────────────────────────────────────── */
+  --color-text:                 #0A0A0A;   /* body text on white surfaces                       */
+  --color-text-secondary:       #525252;
+  /* `--color-text-muted` tightened from #737373 → #525252 per Phase E:
+     axe-core flagged 22 contrast violations against #737373 on light
+     surfaces.  #525252 is the lightest token that passes WCAG AA
+     (contrast ratio 7.46:1 on `--color-canvas` #FAFAFA) while still
+     reading as "secondary" rather than primary body text. */
+  --color-text-muted:           #525252;
+  /* `--color-text-tertiary` retained at the slightly-lighter end of
+     the spectrum for captions / metadata where contrast is less
+     critical and the muted shade communicates hierarchy. */
+  --color-text-tertiary:        #595959;
+  --color-text-placeholder:     #8C8C8C;   /* lifted from #A3A3A3 to pass AA for placeholder text */
+  --color-text-disabled:        #A3A3A3;   /* retained — disabled state is expected to be low-contrast */
+  --color-text-inverse:         #FFFFFF;   /* on navy surfaces             */
+  --color-text-on-primary:      #242424;   /* on lime CTA — never white    */
+  --color-text-on-navy:         #FFFFFF;
+  --color-text-link:            var(--color-brand-navy);
+  /* Heading colour — pinned to brand navy per the H20 spec.  Major H1/H2
+     reads as deliberate AtomGrid signage rather than generic black. */
+  --color-text-heading:         var(--color-brand-navy);
 
-  /* ─────────────────────────  BRAND  ───────────────────────────────────── */
-  --color-brand:                #0F5132;
-  --color-brand-hover:          #0B4127;
-  --color-brand-pressed:        #082D1B;
-  --color-brand-accent:         #13B981;
+  /* ─────────────────────────  STATUS  ───────────────────────────────────── */
+  --color-status-success:         #15803D;   /* darker green — distinct from brand-primary */
+  --color-status-success-subtle:  rgba(21, 128, 61, 0.10);
+  --color-status-warning:         #B45309;
+  --color-status-warning-subtle:  rgba(180, 83, 9, 0.10);
+  --color-status-danger:          #B91C1C;
+  --color-status-danger-subtle:   rgba(185, 28, 28, 0.10);
+  --color-status-info:            #1D4ED8;
+  --color-status-info-subtle:     rgba(29, 78, 216, 0.08);
+  /* Aliases retained for backwards compatibility with existing components.
+     New code should prefer --color-status-*. */
+  --color-success:              var(--color-status-success);
+  --color-warning:              var(--color-status-warning);
+  --color-danger:               var(--color-status-danger);
+  --color-info:                 var(--color-status-info);
 
-  /* ─────────────────────────  STATUS  ──────────────────────────────────── */
-  --color-success:              #0F5132;
-  --color-warning:              #B45309;
-  --color-danger:               #B91C1C;
-  --color-info:                 #1D4ED8;
+  /* ─────────────────────────  BRAND ALIASES (back-compat)  ──────────────────
+     The H1-H19 codebase referenced `--color-brand` etc.  Keep aliases live
+     so the migration can land token-by-token rather than as one big-bang
+     refactor; new code prefers --color-brand-primary. */
+  --color-brand:                var(--color-brand-primary);
+  --color-brand-hover:          var(--color-brand-primary-hover);
+  --color-brand-pressed:        var(--color-brand-primary-active);
+  --color-brand-accent:         var(--color-brand-primary);
 
-  /* ─────────────────────────  CHART PALETTE  ───────────────────────────── */
+  /* ─────────────────────────  CHART PALETTE  ────────────────────────────── */
   /* Categorical chart colours.  Desaturated, Lattice/Stripe-leaning, all
-     readable on the warm-light canvas at --color-canvas.  Reds and ambers
-     stay reserved for semantic status (danger, warning) — so none of these
-     three hues collide with the meaning of those.  Stable mapping to
-     manager teams lives in src/lib/analytics-colors.ts so the next person
-     touching this doesn't reshuffle the assignment. */
-  --color-chart-1:              var(--color-brand);  /* emerald  #0F5132 */
-  --color-chart-2:              #475569;             /* slate blue */
-  --color-chart-3:              #7E22CE;             /* violet */
+     readable on the canvas.  Reds and ambers stay reserved for semantic
+     status (danger, warning) — so none of these collide with meaning.
+     Stable mapping to manager teams lives in src/lib/analytics-colors.ts. */
+  --color-chart-1:              var(--color-brand-navy);  /* primary line — navy */
+  --color-chart-2:              #475569;                  /* slate blue          */
+  --color-chart-3:              #7E22CE;                  /* violet              */
+  --color-chart-4:              var(--color-brand-primary); /* accent / highlight */
 
-  /* ─────────────────────────  TYPOGRAPHY  ──────────────────────────────── */
-  --font-sans:                  var(--font-geist-sans), system-ui, sans-serif;
+  /* ─────────────────────────  TYPOGRAPHY  ───────────────────────────────── */
+  /* Poppins for brand fidelity with atomgrid.in; Geist Mono retained for
+     tabular numerics + IDs.  Both loaded via next/font in src/app/layout.tsx. */
+  --font-sans:                  var(--font-poppins), system-ui, -apple-system, sans-serif;
   --font-mono:                  var(--font-geist-mono), ui-monospace, monospace;
 
-  /* type scale — 12 / 14 / 16 / 20 / 24 / 32 ONLY */
+  /* type scale — 12 / 13 / 14 / 16 / 18 / 20 / 22 / 24 / 28 / 32 / 40 / 48
+     (extended over the H2 baseline to give D3's heading scale headroom).   */
   --text-xs:                    12px;
   --text-xs--line-height:       16px;
   --text-sm:                    14px;
   --text-sm--line-height:       20px;
   --text-base:                  16px;
   --text-base--line-height:     24px;
+  --text-md:                    18px;
+  --text-md--line-height:       26px;
   --text-lg:                    20px;
   --text-lg--line-height:       28px;
-  --text-xl:                    24px;
-  --text-xl--line-height:       32px;
-  --text-2xl:                   32px;
-  --text-2xl--line-height:      40px;
+  --text-xl:                    22px;
+  --text-xl--line-height:       28px;
+  --text-2xl:                   24px;
+  --text-2xl--line-height:      32px;
+  --text-3xl:                   28px;
+  --text-3xl--line-height:      36px;
+  --text-4xl:                   32px;
+  --text-4xl--line-height:      40px;
 
-  /* ─────────────────────────  RADIUS  ──────────────────────────────────── */
-  --radius-sm:                  4px;   /* inputs, badges */
-  --radius-md:                  6px;   /* buttons */
-  --radius-lg:                  8px;   /* cards */
-  --radius-xl:                  12px;  /* modals */
+  /* ─────────────────────────  RADIUS  ────────────────────────────────────── */
+  --radius-sm:                  4px;    /* chips, badges, status pills          */
+  --radius-md:                  6px;    /* buttons, inputs, popover menu items  */
+  --radius-lg:                  8px;    /* cards, dropdowns                     */
+  --radius-xl:                  12px;   /* modals                               */
+  --radius-pill:                9999px;
+  /* AtomGrid corporate radius — extracted from Contact Us button (10px).
+     Use for primary CTAs that want to read as "marketing button" rather
+     than "form control."  D4 spec calls this out explicitly. */
+  --radius-button:              10px;
 
-  /* ─────────────────────────  SHADOW  ──────────────────────────────────── */
-  --shadow-button-primary:        inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.10);
-  --shadow-button-primary-active: inset 0 -1px 0 rgba(0, 0, 0, 0.10);
-  --shadow-button-secondary:      inset 0 1px 0 rgba(255, 255, 255, 0.60), inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+  /* ─────────────────────────  SHADOW  ────────────────────────────────────── */
+  /* Multi-layer like Linear / Vercel.  Atomgrid.in itself is flat — primary
+     buttons drop shadow to match, but functional surfaces (popovers,
+     modals) keep elevation for spatial hierarchy. */
+  --shadow-xs:                  0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm:                  0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02);
+  --shadow-md:                  0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-lg:                  0 4px 8px rgba(0, 0, 0, 0.04), 0 12px 24px rgba(0, 0, 0, 0.08);
+  --shadow-xl:                  0 8px 16px rgba(0, 0, 0, 0.06), 0 24px 48px rgba(0, 0, 0, 0.10);
+  /* Legacy aliases — kept until D4 button refactor lands. */
+  --shadow-button-primary:        none;
+  --shadow-button-primary-active: none;
+  --shadow-button-secondary:      var(--shadow-xs);
   --shadow-input:                 inset 0 1px 1px rgba(0, 0, 0, 0.03);
-  --shadow-popover:               0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-popover:               var(--shadow-lg);
 
-  /* ─────────────────────────  MOTION  ──────────────────────────────────── */
+  /* ─────────────────────────  MOTION  ────────────────────────────────────── */
   --ease-brand:                 cubic-bezier(0.2, 0, 0, 1);
   --duration-micro:             80ms;
-  --duration-hover:             120ms;
-  --duration-panel:             220ms;
+  --duration-hover:             150ms;
+  --duration-panel:             200ms;
   --duration-route:             320ms;
 }
 
@@ -95,11 +171,16 @@
   }
   h1,
   h2 {
+    color: var(--color-text-heading);
     letter-spacing: -0.01em;
   }
+  h3,
+  h4 {
+    color: var(--color-text-heading);
+  }
   ::selection {
-    background: var(--color-brand);
-    color: #ffffff;
+    background: var(--color-brand-primary);
+    color: var(--color-text-on-primary);
   }
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -108,5 +189,28 @@
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+/* Skip link — visible only on focus, top-left.  Lives outside @theme so
+   Tailwind doesn't try to interpret it.  Used by the (app) layout. */
+@layer components {
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 8px;
+    z-index: 999;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-brand-navy);
+    color: var(--color-text-inverse);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: top var(--duration-hover) var(--ease-brand);
+  }
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    top: 8px;
+    outline: none;
   }
 }

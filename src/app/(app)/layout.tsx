@@ -11,11 +11,19 @@ export default async function AppLayout({
   const user = await getCurrentUser();
   return (
     <div className="flex min-h-screen">
+      {/* Skip-link — first focusable element so keyboard users can
+          jump straight to <main>.  Styles in globals.css under
+          .skip-link (hidden until :focus-visible). */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <Sidebar role={user?.role ?? null} />
       <div className="flex min-w-0 flex-1 flex-col">
         <SiteHeader />
         <TimeTravelBanner />
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1">
+          {children}
+        </main>
       </div>
     </div>
   );

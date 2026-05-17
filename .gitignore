@@ -43,3 +43,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# H20 audit — keep summary docs + visual-regression snapshots + extracted
+# logo asset; ignore the ~10MB of per-run PNGs, run-output JSON, and any
+# macOS-style "screenshots N" duplicate directories.  Everything in the
+# ignore list regenerates on demand via `pnpm e2e:audit`.
+audit/screenshots/
+audit/screenshots*
+audit/screenshots-*.zip
+audit/atomgrid-reference/_raw.json
+audit/atomgrid-reference/_navy-recon.json
+audit/a11y-report.json
+audit/runtime-errors.json
+audit/token-violations.json

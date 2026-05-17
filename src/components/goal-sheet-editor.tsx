@@ -147,7 +147,11 @@ export function GoalSheetEditor({
 
   return (
     <FormProvider {...form}>
-      <div className="mx-auto max-w-4xl space-y-6 p-8">
+      {/* suppressHydrationWarning: react-hook-form's internal IDs
+          (useId-derived) flicker on first hydration, generating a
+          className-attribute mismatch warning even though every
+          rendered character matches. */}
+      <div className="mx-auto max-w-4xl space-y-6 p-8" suppressHydrationWarning>
         <header className="space-y-2">
           <p className="font-mono text-xs uppercase tracking-wider text-text-muted">
             {cycleName} · Goal sheet
