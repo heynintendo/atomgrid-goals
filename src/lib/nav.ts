@@ -39,7 +39,9 @@ export const NAV_BY_ROLE: Record<Role, NavSection[]> = {
     {
       label: "Personal",
       items: [
-        { href: "/employee", label: "Home", icon: LayoutDashboard },
+        // "Overview" matches the manager + admin nav so all three personas
+        // land on a consistent role-aware dashboard label.
+        { href: "/employee", label: "Overview", icon: LayoutDashboard },
         { href: "/employee/goal-sheet", label: "Goal sheet", icon: Target },
         {
           href: "/employee/check-ins",
