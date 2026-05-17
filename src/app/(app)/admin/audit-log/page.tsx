@@ -160,7 +160,7 @@ export default async function AuditLogPage({
         })}
       </div>
 
-      <AuditLogTable rows={rows} />
+      <AuditLogTable rows={rows} filterActive={action != null} />
     </div>
   );
 }

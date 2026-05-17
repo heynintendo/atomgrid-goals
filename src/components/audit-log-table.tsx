@@ -26,7 +26,12 @@ export interface AuditRow {
 }
 
 interface AuditLogTableProps {
-  rows: AuditRow[];
+  rows:           AuditRow[];
+  // True when the page-level action filter is set and yielded zero
+  // rows.  Drives different empty-state copy ("no matches" vs
+  // "audit log empty overall") so the user knows to clear the filter
+  // rather than think the system has no history.
+  filterActive?:  boolean;
 }
 
 const ACTION_DOT: Record<AuditAction, string> = {
@@ -40,7 +45,7 @@ const ACTION_DOT: Record<AuditAction, string> = {
   ESCALATION_RESOLVED:  "bg-brand",
 };
 
-export function AuditLogTable({ rows }: AuditLogTableProps) {
+export function AuditLogTable({ rows, filterActive = false }: AuditLogTableProps) {
   if (rows.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-surface-1 p-12 text-center">
@@ -51,22 +56,84 @@ export function AuditLogTable({ rows }: AuditLogTableProps) {
           className="mx-auto text-text-muted"
         />
         <p className="mt-4 font-mono text-xs uppercase tracking-wider text-text-muted">
-          Audit log empty
+          {filterActive ? "No matches" : "Audit log empty"}
         </p>
         <h2 className="mt-2 text-lg font-semibold tracking-tight text-text">
-          No admin overrides recorded yet
+          {filterActive
+            ? "No events match this filter"
+            : "No admin overrides recorded yet"}
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-text-secondary">
-          Every post-approval edit is captured here with its before/after diff
-          and the admin&apos;s reason. Rows show up the moment an admin
-          unlocks a sheet or edits a locked goal.
+          {filterActive
+            ? "Try clearing the filter to see the rest of the audit history, or pick a different action category."
+            : "Every post-approval edit is captured here with its before/after diff and the admin’s reason. Rows show up the moment an admin unlocks a sheet or edits a locked goal."}
         </p>
       </div>
     );
   }
 
   return (
-    <Table>
+    <>
+      {/* Mobile card list — <md viewport.  6 fields × 200 rows doesn't
+          fit horizontally on 375px, so each event becomes a stacked
+          card with timestamp + actor at the top, action chip on its
+          own row, target/reason/diff stacked below.  Reads like a
+          changelog entry rather than a clipped table. */}
+      <div className="space-y-3 md:hidden">
+        {rows.map((r) => (
+          <article key={r.id} className="rounded-lg border border-border bg-surface-1 p-4">
+            <header className="flex items-baseline justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-text">{r.actor.name}</p>
+                <p className="truncate font-mono text-xs text-text-muted">{r.actor.email}</p>
+              </div>
+              <p className="shrink-0 whitespace-nowrap font-mono text-xs text-text-secondary tabular-nums" suppressHydrationWarning>
+                {format(new Date(r.createdAtISO), "d MMM · HH:mm")}
+              </p>
+            </header>
+            <div className="mt-3">
+              <span className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-surface-2 px-2 py-0.5">
+                <span
+                  aria-hidden
+                  className={cn("h-1.5 w-1.5 rounded-full", ACTION_DOT[r.action])}
+                />
+                <span className="font-mono text-xs font-medium text-text-secondary">
+                  {r.action}
+                </span>
+              </span>
+            </div>
+            <dl className="mt-3 space-y-2 border-t border-border-subtle pt-3 text-sm">
+              <div>
+                <dt className="font-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+                  Target
+                </dt>
+                <dd className="mt-0.5 text-text">{r.target.label}</dd>
+                {r.target.sublabel ? (
+                  <dd className="mt-0.5 font-mono text-xs text-text-muted">{r.target.sublabel}</dd>
+                ) : null}
+              </div>
+              <div>
+                <dt className="font-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+                  Reason
+                </dt>
+                <dd className="mt-0.5 text-xs text-text-secondary">{r.reason ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+                  Diff
+                </dt>
+                <dd className="mt-0.5">
+                  <DiffCell before={r.before} after={r.after} />
+                </dd>
+              </div>
+            </dl>
+          </article>
+        ))}
+      </div>
+
+      {/* Desktop table — md+ viewport.  All 6 columns visible, single-line scan. */}
+      <div className="hidden md:block">
+      <Table>
       <TableHeader>
         <TableRow>
           <TableHead>When</TableHead>
@@ -133,6 +200,8 @@ export function AuditLogTable({ rows }: AuditLogTableProps) {
         ))}
       </TableBody>
     </Table>
+      </div>
+    </>
   );
 }
 

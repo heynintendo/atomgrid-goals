@@ -42,11 +42,26 @@ export function AnalyticsEffectiveness({
     return <EmptyState reason="no-scores" period={currentPeriodLabel} />;
   }
 
-  const rows = bars.map((b) => ({
-    ...b,
-    fill:  bandColorTokens(b.band).baseHex,
-    label: truncate(b.managerName, 20),
-  }));
+  // Three-tier colour rule based on position relative to the org
+  // median, not the absolute BELOW/MEETS/EXCEEDS bands.  Top
+  // performers visually celebrated (lime), typical performers
+  // neutral (slate), underperformers flagged (red).  Median band
+  // is ±1pp so a manager exactly at the median doesn't flicker
+  // between colours on rounding.
+  const MEDIAN_BAND_PP = 1;
+  const median = orgMedianPct;
+  const rows = bars.map((b) => {
+    let fill = "#475569"; // slate — at-median default
+    if (median != null) {
+      if (b.avgScorePct < median - MEDIAN_BAND_PP)      fill = "#B91C1C"; // status-danger
+      else if (b.avgScorePct > median + MEDIAN_BAND_PP) fill = "#A4D845"; // brand-primary
+    } else {
+      // No median yet (single team in scope, or no scored teams) —
+      // fall back to the absolute-band colour from H16.
+      fill = bandColorTokens(b.band).baseHex;
+    }
+    return { ...b, fill, label: truncate(b.managerName, 20) };
+  });
 
   // y-axis upper bound respects the spec (120% ceiling) but extends to
   // accommodate exceptional rows (e.g. an outlier team at 135%).
