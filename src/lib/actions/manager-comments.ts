@@ -1,11 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Role } from "@prisma/client";
+import { CheckInPeriod, Role } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { sendEmail } from "@/lib/email";
+import { ManagerCommentEmail } from "@/emails/manager-comment";
 import { saveManagerCommentSchema } from "@/lib/validators/manager-comments";
 import type { ActionResult } from "@/lib/actions/goals";
+
+const PERIOD_LABEL: Record<CheckInPeriod, string> = {
+  Q1:     "Q1",
+  Q2:     "Q2",
+  Q3:     "Q3",
+  ANNUAL: "Annual",
+};
 
 export async function saveManagerComment(
   raw: unknown,
@@ -30,7 +39,14 @@ export async function saveManagerComment(
     include: {
       goal: {
         select: {
-          sheet: { select: { owner: { select: { managerId: true } } } },
+          title: true,
+          sheet: {
+            select: {
+              owner: {
+                select: { name: true, managerId: true },
+              },
+            },
+          },
         },
       },
     },
@@ -55,6 +71,23 @@ export async function saveManagerComment(
       managerCommentAt: clearing ? null : new Date(),
     },
   });
+
+  // Post-commit email — only when the manager added a real comment
+  // (not when they're clearing one).  The employee sees the verbatim
+  // comment so they can act without opening the app first.
+  if (!clearing) {
+    await sendEmail({
+      kind:    "manager-comment",
+      subject: `${user.name} left feedback on your ${PERIOD_LABEL[checkIn.period]} check-in`,
+      react:   ManagerCommentEmail({
+        employeeName: checkIn.goal.sheet.owner.name,
+        managerName:  user.name,
+        period:       PERIOD_LABEL[checkIn.period],
+        goalTitle:    checkIn.goal.title,
+        comment:      trimmed,
+      }),
+    });
+  }
 
   revalidatePath("/manager/check-ins");
   revalidatePath(`/employee/check-in/${checkIn.period}`);

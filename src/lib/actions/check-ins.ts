@@ -10,6 +10,8 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { sendEmail } from "@/lib/email";
+import { CheckInSubmittedEmail } from "@/emails/checkin-submitted";
 import { getSystemDate, phaseForDate } from "@/lib/system-date";
 import { computeScore, type UomType } from "@/lib/scoring";
 import {
@@ -17,6 +19,13 @@ import {
   type CheckInEntryInput,
 } from "@/lib/validators/check-ins";
 import type { ActionResult } from "@/lib/actions/goals";
+
+const PERIOD_LABEL_FOR_EMAIL: Record<CheckInPeriod, string> = {
+  Q1:     "Q1",
+  Q2:     "Q2",
+  Q3:     "Q3",
+  ANNUAL: "Annual",
+};
 
 // Period → CyclePhase mapping for window-state checks.  ANNUAL covers the
 // final Q4/Annual phase.
@@ -127,6 +136,19 @@ export async function saveCheckIn(raw: unknown): Promise<ActionResult> {
 
   const goalsById = new Map(sheet.goals.map((g) => [g.id, g]));
 
+  // Snapshot how many goals are already fully checked-in for this
+  // period before the transaction runs.  Used post-tx to detect the
+  // single transition that flips the period from "in progress" to
+  // "submitted" — that's the email trigger.  Quick count, no full row
+  // fetch needed.
+  const fullyCheckedBefore = await prisma.checkIn.count({
+    where: {
+      period,
+      computedScore: { not: null },
+      goal: { sheetId: sheet.id },
+    },
+  });
+
   try {
     await prisma.$transaction(
       async (tx) => {
@@ -227,6 +249,38 @@ export async function saveCheckIn(raw: unknown): Promise<ActionResult> {
           ? `Save failed: ${e.message}`
           : "Save failed — please retry",
     };
+  }
+
+  // Post-commit: notify the manager if THIS save was the one that
+  // flipped the period to fully-submitted.  The before/after
+  // comparison prevents re-sending on repeated saves once already
+  // complete.
+  const totalGoals = sheet.goals.length;
+  if (totalGoals > 0 && fullyCheckedBefore < totalGoals) {
+    const fullyCheckedAfter = await prisma.checkIn.count({
+      where: {
+        period,
+        computedScore: { not: null },
+        goal: { sheetId: sheet.id },
+      },
+    });
+    if (fullyCheckedAfter === totalGoals) {
+      const ctx = await prisma.user.findUnique({
+        where:  { id: user.id },
+        select: { name: true, manager: { select: { name: true } } },
+      });
+      if (ctx?.manager) {
+        await sendEmail({
+          kind:    "checkin-submitted",
+          subject: `${ctx.name} submitted their ${PERIOD_LABEL_FOR_EMAIL[period]} check-in`,
+          react:   CheckInSubmittedEmail({
+            employeeName: ctx.name,
+            managerName:  ctx.manager.name,
+            period:       PERIOD_LABEL_FOR_EMAIL[period],
+          }),
+        });
+      }
+    }
   }
 
   revalidatePath(`/employee/check-in/${period}`);

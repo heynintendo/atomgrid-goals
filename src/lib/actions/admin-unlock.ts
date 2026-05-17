@@ -8,6 +8,8 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { sendEmail } from "@/lib/email";
+import { SheetUnlockedEmail } from "@/emails/sheet-unlocked";
 import { recordAudit } from "@/lib/audit";
 import { unlockSheetSchema } from "@/lib/validators/admin-unlock";
 import type { ActionResult } from "@/lib/actions/goals";
@@ -34,6 +36,7 @@ export async function unlockSheet(raw: unknown): Promise<ActionResult> {
     where: { id: parsed.data.sheetId },
     include: {
       owner: { select: { name: true, email: true } },
+      cycle: { select: { name: true } },
     },
   });
   if (!sheet) return { ok: false, error: "Sheet not found" };
@@ -76,6 +79,18 @@ export async function unlockSheet(raw: unknown): Promise<ActionResult> {
       error: e instanceof Error ? `Unlock failed: ${e.message}` : "Unlock failed",
     };
   }
+
+  // Post-commit email — sheet UNLOCKED notice with the audited reason.
+  await sendEmail({
+    kind:    "sheet-unlocked",
+    subject: `${user.name} unlocked your ${sheet.cycle.name} goal sheet`,
+    react:   SheetUnlockedEmail({
+      employeeName: sheet.owner.name,
+      adminName:    user.name,
+      cycleName:    sheet.cycle.name,
+      reason:       parsed.data.reason,
+    }),
+  });
 
   revalidatePath("/admin/unlock");
   revalidatePath("/admin/audit-log");

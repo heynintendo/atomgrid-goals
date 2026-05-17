@@ -9,6 +9,8 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { sendEmail } from "@/lib/email";
+import { SheetSubmittedEmail } from "@/emails/sheet-submitted";
 import {
   saveSheetInputSchema,
   submitSheetInputSchema,
@@ -238,6 +240,24 @@ export async function submitSheet(raw: unknown): Promise<ActionResult> {
       },
     });
   });
+
+  // Post-commit: notify the manager.  Wrapped sendEmail() swallows
+  // failures so a Resend outage doesn't roll back the user's submit.
+  const owner = await prisma.user.findUnique({
+    where:  { id: user.id },
+    select: { name: true, manager: { select: { name: true } } },
+  });
+  if (owner?.manager) {
+    await sendEmail({
+      kind:    "sheet-submitted",
+      subject: `${owner.name} submitted their ${cycle.name} goal sheet`,
+      react:   SheetSubmittedEmail({
+        employeeName: owner.name,
+        managerName:  owner.manager.name,
+        cycleName:    cycle.name,
+      }),
+    });
+  }
 
   revalidatePath("/employee/goal-sheet");
   revalidatePath("/manager/approvals");

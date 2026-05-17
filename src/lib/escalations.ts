@@ -10,7 +10,17 @@ import {
 } from "@prisma/client";
 import { format } from "date-fns";
 import { prisma } from "@/lib/db";
+import { sendEmail } from "@/lib/email";
+import { EscalationL1Email } from "@/emails/escalation-l1";
+import { EscalationL2Email } from "@/emails/escalation-l2";
 import { getSystemDate } from "@/lib/system-date";
+
+const PERIOD_LABEL: Record<CheckInPeriod, string> = {
+  Q1:     "Q1",
+  Q2:     "Q2",
+  Q3:     "Q3",
+  ANNUAL: "Annual",
+};
 
 // L3 (HR) and L4 (EXECUTIVE) levels are scaffolded in the EscalationLevel
 // enum for future extension.  This engine currently only writes L1
@@ -146,12 +156,101 @@ export async function checkAndCreateEscalations(): Promise<EscalationSummary> {
     }),
   ]);
 
+  // ── Post-commit email fan-out ─────────────────────────────────────
+  // Notifications fire AFTER the transaction commits.  If they were
+  // inside the txn and something below rolled back, we'd email about
+  // escalations that don't actually exist.  Promise.allSettled means
+  // a single Resend hiccup doesn't drop the rest.
+  if (l1Result.count > 0 || l2Result.count > 0) {
+    await fireEscalationEmails(realNow, sheets[0]?.cycle);
+  }
+
   return {
     newLevel1:  l1Result.count,
     newLevel2:  l2Result.count,
     executedAt: realNow.toISOString(),
     systemDate: systemDate.toISOString(),
   };
+}
+
+// Reads back the rows we just wrote (keyed by triggeredAt = realNow,
+// which is uniform within a single engine run), resolves the recipient
+// names from the user graph, and fires one email per row in parallel.
+async function fireEscalationEmails(
+  triggeredAt: Date,
+  // Any cycle we already loaded for the L1 phase.  Re-derives window-
+  // close dates without an extra Prisma round-trip when present.
+  cycleHint: {
+    q2OpensAt:     Date;
+    q3OpensAt:     Date;
+    annualOpensAt: Date;
+    endDate:       Date;
+  } | undefined,
+): Promise<void> {
+  const inserted = await prisma.escalationEvent.findMany({
+    where:   { triggeredAt },
+    include: {
+      targetUser: {
+        select: {
+          name: true,
+          manager: { select: { name: true } },
+        },
+      },
+    },
+  });
+  if (inserted.length === 0) return;
+
+  // L2 routes to the first admin in the seed (Priya).  Production would
+  // walk the org graph for the actual skip-level manager.
+  const admin = await prisma.user.findFirst({
+    where:  { role: Role.ADMIN },
+    select: { name: true },
+  });
+
+  // If no cycle was available in the L1 phase (L2-only run), look up
+  // the active one so the window-close date is still surfaced in L1
+  // emails on a future re-run.
+  const cycle = cycleHint ?? (await prisma.cycle.findFirst({
+    where:  { isActive: true },
+    select: {
+      q2OpensAt: true, q3OpensAt: true, annualOpensAt: true, endDate: true,
+    },
+  }));
+
+  const sends: Promise<unknown>[] = [];
+  for (const row of inserted) {
+    if (!row.period) continue;
+    const periodLabel = PERIOD_LABEL[row.period];
+
+    if (row.currentLevel === EscalationLevel.MANAGER) {
+      if (!row.targetUser.manager || !cycle) continue;
+      const closes = periodCloseDates(cycle);
+      sends.push(sendEmail({
+        kind:    "escalation-l1",
+        subject: `Action required: ${row.targetUser.name} has not submitted their ${periodLabel} check-in`,
+        react:   EscalationL1Email({
+          employeeName:        row.targetUser.name,
+          managerName:         row.targetUser.manager.name,
+          period:              periodLabel,
+          windowClosedDateISO: format(closes[row.period], "yyyy-MM-dd"),
+        }),
+      }));
+    } else if (row.currentLevel === EscalationLevel.SKIP_LEVEL) {
+      if (!admin || !row.targetUser.manager) continue;
+      sends.push(sendEmail({
+        kind:    "escalation-l2",
+        subject: `Skip-level: ${row.targetUser.manager.name} has not acted on ${row.targetUser.name}'s ${periodLabel} escalation`,
+        react:   EscalationL2Email({
+          adminName:    admin.name,
+          managerName:  row.targetUser.manager.name,
+          employeeName: row.targetUser.name,
+          period:       periodLabel,
+        }),
+      }));
+    }
+  }
+
+  await Promise.allSettled(sends);
 }
 
 // ─────────────────────────────  READ LAYER  ────────────────────────────────

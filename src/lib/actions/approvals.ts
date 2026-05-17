@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { GoalSheetStatus, Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { sendEmail } from "@/lib/email";
+import { SheetApprovedEmail } from "@/emails/sheet-approved";
+import { SheetReturnedEmail } from "@/emails/sheet-returned";
 import {
   approveSheetInputSchema,
   returnSheetInputSchema,
@@ -124,6 +127,26 @@ export async function approveSheet(raw: unknown): Promise<ActionResult> {
     };
   }
 
+  // Post-commit email — sheet APPROVED notice to the employee.
+  const ctx = await prisma.goalSheet.findUnique({
+    where:  { id: parsed.data.sheetId },
+    select: {
+      owner: { select: { name: true } },
+      cycle: { select: { name: true } },
+    },
+  });
+  if (ctx) {
+    await sendEmail({
+      kind:    "sheet-approved",
+      subject: `${user.name} approved your ${ctx.cycle.name} goal sheet`,
+      react:   SheetApprovedEmail({
+        employeeName: ctx.owner.name,
+        managerName:  user.name,
+        cycleName:    ctx.cycle.name,
+      }),
+    });
+  }
+
   revalidatePath("/manager/approvals");
   revalidatePath(`/manager/approvals/${parsed.data.sheetId}`);
   revalidatePath("/employee/goal-sheet");
@@ -165,6 +188,27 @@ export async function returnSheet(raw: unknown): Promise<ActionResult> {
       ok: false,
       error: e instanceof Error ? e.message : "Return failed",
     };
+  }
+
+  // Post-commit email — sheet RETURNED notice with the verbatim reason.
+  const ctx = await prisma.goalSheet.findUnique({
+    where:  { id: parsed.data.sheetId },
+    select: {
+      owner: { select: { name: true } },
+      cycle: { select: { name: true } },
+    },
+  });
+  if (ctx) {
+    await sendEmail({
+      kind:    "sheet-returned",
+      subject: `${user.name} returned your ${ctx.cycle.name} goal sheet`,
+      react:   SheetReturnedEmail({
+        employeeName: ctx.owner.name,
+        managerName:  user.name,
+        cycleName:    ctx.cycle.name,
+        reason:       parsed.data.reason,
+      }),
+    });
   }
 
   revalidatePath("/manager/approvals");
