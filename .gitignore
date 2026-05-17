@@ -53,6 +53,11 @@ audit/screenshots*
 audit/screenshots-*.zip
 audit/atomgrid-reference/_raw.json
 audit/atomgrid-reference/_navy-recon.json
+# Atomgrid.in recon screenshots — kept for the methodology record under
+# git history if you want them; today they're 16MB of references that
+# stay local.  logo.svg is the only artifact in that directory worth
+# committing (it's the extracted production asset).
+audit/atomgrid-reference/*.png
 audit/a11y-report.json
 audit/runtime-errors.json
 audit/token-violations.json

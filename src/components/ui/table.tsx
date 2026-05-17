@@ -8,7 +8,11 @@ const Table = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     className={cn(
-      "overflow-hidden rounded-lg border border-border bg-surface-1",
+      // overflow-x-auto so wide tables (escalations, unlock,
+      // completion, approvals) remain reachable at 375px instead of
+      // clipping the rightmost columns; overflow-y-hidden preserves
+      // the rounded-lg corners on desktop.
+      "overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-surface-1",
       className,
     )}
   >

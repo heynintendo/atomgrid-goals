@@ -57,8 +57,15 @@ export default async function AdminOverviewPage() {
         currentLevel: EscalationLevel.SKIP_LEVEL,
       },
     }),
+    // Employee-only filter on the owner — managers (e.g. Karthik) can
+    // have their own goal sheets but those shouldn't count toward
+    // org completion or manager-effectiveness aggregations.  Without
+    // the filter, Karthik's personal sheet would land under his own
+    // manager (Priya, an admin) and surface as "Unknown" on the
+    // effectiveness mini-chart since the name lookup only knows
+    // role=MANAGER users.
     prisma.goalSheet.findMany({
-      where: { cycleId: cycle.id },
+      where: { cycleId: cycle.id, owner: { role: Role.EMPLOYEE } },
       include: {
         owner: { select: { managerId: true } },
         goals: { include: { checkIns: { where: { period: currentPeriod } } } },
