@@ -33,6 +33,37 @@ const resendClient =
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
 
+// Resend free-tier ceiling is 2 requests per second.  Firing a bigger
+// fan-out batch in parallel (e.g. an L1+L2 cron wave with 9 sends)
+// trips HTTP 429s and silently drops most messages.  pacedSettled
+// serialises the calls with a small gap so we stay just under the
+// limit without paying for paid-tier throughput.
+//
+// Takes thunks (not pre-started promises) so each network call only
+// starts when its slot is up; Promise.allSettled's semantics are
+// preserved — every thunk runs, one failure cannot cancel a sibling,
+// and the caller sees per-send status.
+const PACE_GAP_MS = 600;
+
+export async function pacedSettled<T>(
+  factories: Array<() => Promise<T>>,
+  gapMs:     number = PACE_GAP_MS,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = [];
+  for (let i = 0; i < factories.length; i++) {
+    try {
+      const value = await factories[i]();
+      results.push({ status: "fulfilled", value });
+    } catch (reason) {
+      results.push({ status: "rejected", reason });
+    }
+    if (i < factories.length - 1) {
+      await new Promise((r) => setTimeout(r, gapMs));
+    }
+  }
+  return results;
+}
+
 export async function sendEmail(input: SendEmailInput): Promise<void> {
   if (!resendClient) {
     console.log(`[email/${input.kind}] skipped — RESEND_API_KEY not set`);

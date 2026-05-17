@@ -8,7 +8,7 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { sendEmail } from "@/lib/email";
+import { pacedSettled, sendEmail } from "@/lib/email";
 import { SheetUnlockedEmail } from "@/emails/sheet-unlocked";
 import { recordAudit } from "@/lib/audit";
 import { unlockSheetSchema } from "@/lib/validators/admin-unlock";
@@ -88,11 +88,12 @@ export async function unlockSheet(raw: unknown): Promise<ActionResult> {
 
   // Post-commit email fan-out — employee (action: revise + resubmit)
   // and their manager (heads-up: expect a fresh approval cycle).
-  // Promise.allSettled isolates a Resend hiccup on one send from the
-  // other; sendEmail itself swallows failures internally, layered.
+  // pacedSettled serialises sends with a 600ms gap so Resend's free-tier
+  // 2 req/sec ceiling is never tripped; sendEmail still swallows
+  // per-call failures internally as a second isolation layer.
   const managerName = sheet.owner.manager?.name ?? null;
-  const sends: Promise<unknown>[] = [
-    sendEmail({
+  const factories: Array<() => Promise<void>> = [
+    () => sendEmail({
       kind:    "sheet-unlocked-employee",
       subject: `${user.name} unlocked your ${sheet.cycle.name} goal sheet`,
       react:   SheetUnlockedEmail({
@@ -106,7 +107,7 @@ export async function unlockSheet(raw: unknown): Promise<ActionResult> {
     }),
   ];
   if (managerName) {
-    sends.push(sendEmail({
+    factories.push(() => sendEmail({
       kind:    "sheet-unlocked-manager",
       subject: `${sheet.owner.name}'s ${sheet.cycle.name} goal sheet was unlocked`,
       react:   SheetUnlockedEmail({
@@ -119,7 +120,7 @@ export async function unlockSheet(raw: unknown): Promise<ActionResult> {
       }),
     }));
   }
-  await Promise.allSettled(sends);
+  await pacedSettled(factories);
 
   revalidatePath("/admin/unlock");
   revalidatePath("/admin/audit-log");

@@ -10,7 +10,7 @@ import {
 } from "@prisma/client";
 import { format } from "date-fns";
 import { prisma } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { pacedSettled, sendEmail } from "@/lib/email";
 import { EscalationL1Email } from "@/emails/escalation-l1";
 import { EscalationL2Email } from "@/emails/escalation-l2";
 import { getSystemDate } from "@/lib/system-date";
@@ -217,7 +217,11 @@ async function fireEscalationEmails(
     },
   }));
 
-  const sends: Promise<unknown>[] = [];
+  // Build thunks rather than already-started Promises so pacedSettled
+  // can stagger the actual fetch calls.  A 9-send L1+L2 wave fired in
+  // parallel hits Resend's free-tier 2 req/sec ceiling and most sends
+  // come back as silently-swallowed 429s; serialised it lands cleanly.
+  const factories: Array<() => Promise<void>> = [];
   for (const row of inserted) {
     if (!row.period) continue;
     const periodLabel = PERIOD_LABEL[row.period];
@@ -228,24 +232,24 @@ async function fireEscalationEmails(
       const windowClosedDateISO = format(closes[row.period], "yyyy-MM-dd");
       // L1 fans out to BOTH the manager (action required) and the
       // employee (heads-up that the chain has started).
-      sends.push(sendEmail({
+      factories.push(() => sendEmail({
         kind:    "escalation-l1-manager",
         subject: `L1 escalation: ${row.targetUser.name} sheet overdue`,
         react:   EscalationL1Email({
           audience:    "manager",
           employeeName: row.targetUser.name,
-          managerName:  row.targetUser.manager.name,
+          managerName:  row.targetUser.manager!.name,
           period:       periodLabel,
           windowClosedDateISO,
         }),
       }));
-      sends.push(sendEmail({
+      factories.push(() => sendEmail({
         kind:    "escalation-l1-employee",
         subject: `Your ${periodLabel} goal sheet has been escalated`,
         react:   EscalationL1Email({
           audience:    "employee",
           employeeName: row.targetUser.name,
-          managerName:  row.targetUser.manager.name,
+          managerName:  row.targetUser.manager!.name,
           period:       periodLabel,
           windowClosedDateISO,
         }),
@@ -253,36 +257,36 @@ async function fireEscalationEmails(
     } else if (row.currentLevel === EscalationLevel.SKIP_LEVEL) {
       if (!admin || !row.targetUser.manager) continue;
       // L2 fans out to admin (action), manager (notice), and employee
-      // (urgency).  Three sends per row, one Promise per audience.
-      sends.push(sendEmail({
+      // (urgency).  Three sends per row, one thunk per audience.
+      factories.push(() => sendEmail({
         kind:    "escalation-l2-admin",
-        subject: `Skip-level: ${row.targetUser.manager.name} has not acted on ${row.targetUser.name}'s ${periodLabel} escalation`,
+        subject: `Skip-level: ${row.targetUser.manager!.name} has not acted on ${row.targetUser.name}'s ${periodLabel} escalation`,
         react:   EscalationL2Email({
           audience:    "admin",
-          adminName:    admin.name,
-          managerName:  row.targetUser.manager.name,
+          adminName:    admin!.name,
+          managerName:  row.targetUser.manager!.name,
           employeeName: row.targetUser.name,
           period:       periodLabel,
         }),
       }));
-      sends.push(sendEmail({
+      factories.push(() => sendEmail({
         kind:    "escalation-l2-manager",
         subject: `L2 escalation: ${row.targetUser.name}'s ${periodLabel} sheet under admin review`,
         react:   EscalationL2Email({
           audience:    "manager",
-          adminName:    admin.name,
-          managerName:  row.targetUser.manager.name,
+          adminName:    admin!.name,
+          managerName:  row.targetUser.manager!.name,
           employeeName: row.targetUser.name,
           period:       periodLabel,
         }),
       }));
-      sends.push(sendEmail({
+      factories.push(() => sendEmail({
         kind:    "escalation-l2-employee",
         subject: `Your ${periodLabel} sheet has been escalated to admin`,
         react:   EscalationL2Email({
           audience:    "employee",
-          adminName:    admin.name,
-          managerName:  row.targetUser.manager.name,
+          adminName:    admin!.name,
+          managerName:  row.targetUser.manager!.name,
           employeeName: row.targetUser.name,
           period:       periodLabel,
         }),
@@ -290,7 +294,7 @@ async function fireEscalationEmails(
     }
   }
 
-  await Promise.allSettled(sends);
+  await pacedSettled(factories);
 }
 
 // ─────────────────────────────  READ LAYER  ────────────────────────────────

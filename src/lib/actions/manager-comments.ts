@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { CheckInPeriod, Role } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { sendEmail } from "@/lib/email";
+import { pacedSettled, sendEmail } from "@/lib/email";
 import { ManagerCommentEmail } from "@/emails/manager-comment";
 import { saveManagerCommentSchema } from "@/lib/validators/manager-comments";
 import type { ActionResult } from "@/lib/actions/goals";
@@ -86,8 +86,8 @@ export async function saveManagerComment(
     const employeeName  = checkIn.goal.sheet.owner.name;
     const reportManager = checkIn.goal.sheet.owner.manager?.name ?? null;
 
-    const sends: Promise<unknown>[] = [
-      sendEmail({
+    const factories: Array<() => Promise<void>> = [
+      () => sendEmail({
         kind:    `manager-comment-employee-${commenterRole.toLowerCase()}`,
         subject: `${commenterRole === "ADMIN" ? "Admin " : ""}${user.name} left feedback on your ${periodLabel} check-in`,
         react:   ManagerCommentEmail({
@@ -104,7 +104,7 @@ export async function saveManagerComment(
     ];
 
     if (commenterRole === "ADMIN" && reportManager) {
-      sends.push(sendEmail({
+      factories.push(() => sendEmail({
         kind:    "manager-comment-manager-cc",
         subject: `Admin feedback on ${employeeName}'s ${periodLabel} check-in`,
         react:   ManagerCommentEmail({
@@ -120,7 +120,7 @@ export async function saveManagerComment(
       }));
     }
 
-    await Promise.allSettled(sends);
+    await pacedSettled(factories);
   }
 
   revalidatePath("/manager/check-ins");
