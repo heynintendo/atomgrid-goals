@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
 import { Toaster } from "sonner";
 import { SmoothScrollProvider } from "@/components/scroll/smooth-scroll-provider";
+import { APP_URL } from "@/lib/app-url";
 import "./globals.css";
 
-// Poppins is the AtomGrid corporate font (extracted from atomgrid.in).
-// Weights 400/500/600/700 cover body, UI labels, h3/h4, and h1/h2.
+// Poppins — the app UI typeface, a geometric sans.  (Atomberg's exact
+// wordmark font is proprietary; Poppins is a close, freely-loadable
+// stand-in.)  Weights 400/500/600/700 cover body, UI labels, h3/h4, h1/h2.
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
@@ -22,9 +24,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title:       "AtomGrid · Goals",
+  metadataBase: new URL(APP_URL),
+  title:       "Atomberg · Goals",
   description: "Goal setting and tracking for high-trust teams.",
-  icons:       { icon: "/atomgrid-logo.svg" },
+  icons:       { icon: "/atomberg-icon.png" },
+  openGraph: {
+    title:       "Atomberg · Goals",
+    description: "Goal setting and tracking for high-trust teams.",
+    siteName:    "Atomberg Goals",
+    url:         "/",
+    type:        "website",
+    images:      [{ url: "/og-image.png", width: 1200, height: 630, alt: "Atomberg Goals" }],
+  },
+  twitter: {
+    card:        "summary_large_image",
+    title:       "Atomberg · Goals",
+    description: "Goal setting and tracking for high-trust teams.",
+    images:      ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

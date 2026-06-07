@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 interface LogoProps {
   // Pixel height of the rendered wordmark.  Width is derived from the
-  // logo's native 1597:301 aspect ratio.
+  // logo's native 556:139 (~4:1) aspect ratio.
   size?:      number;
   className?: string;
   // When true, renders as a plain <img> (no Next/Image optimisation).
@@ -12,12 +12,13 @@ interface LogoProps {
   raw?:       boolean;
 }
 
-const ASPECT  = 1597 / 301;      // native viewBox ratio
+const ASPECT  = 556 / 139;       // native ratio of public/atomberg-logo.png (~4:1)
 const DEFAULT = 32;              // sidebar / topbar default
 
-// Official AtomGrid wordmark.  The SVG ships in public/atomgrid-logo.svg
-// and embeds the brand-logo green (#94C240) directly — kept distinct
-// from --color-brand-primary (#A4D845, lighter, used for CTAs).
+// Official Atomberg wordmark (badge + "atomberg" + "Why not?" tagline).
+// Ships as a white-background PNG cropped tight to the logo's bounding
+// box at public/atomberg-logo.png (556x139).  Width derives from that
+// native ratio so the wordmark never squishes.
 //
 // Use this component anywhere the brand identifies itself: sidebar,
 // login page, email headers (via raw=true so the asset URL is
@@ -28,8 +29,8 @@ export function Logo({ size = DEFAULT, className, raw = false }: LogoProps) {
   if (raw) {
     return (
       <img
-        src="/atomgrid-logo.svg"
-        alt="AtomGrid"
+        src="/atomberg-logo.png"
+        alt="Atomberg"
         width={width}
         height={height}
         className={cn("select-none", className)}
@@ -39,8 +40,8 @@ export function Logo({ size = DEFAULT, className, raw = false }: LogoProps) {
   }
   return (
     <Image
-      src="/atomgrid-logo.svg"
-      alt="AtomGrid"
+      src="/atomberg-logo.png"
+      alt="Atomberg"
       width={width}
       height={height}
       priority

@@ -3,10 +3,10 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-// Button variants — AtomGrid brand identity.
+// Button variants — Atomberg brand identity.
 //
 // Primary: lime-green (`--color-brand-primary`) bg with dark navy text
-// (`--color-text-on-primary`).  Flat — no shadow, matching atomgrid.in's
+// (`--color-text-on-primary`).  Flat — no shadow, matching atomberg.in's
 // Contact Us pattern (verified via Phase A recon).  The 1px navy edge
 // is a subtle inset that anchors the button without elevation.
 //
@@ -59,7 +59,7 @@ const buttonVariants = cva(
         md:   "h-9  px-4  text-sm",
         lg:   "h-11 px-6  text-base",
         // Corporate CTA — matches the 52px Contact Us button on
-        // atomgrid.in.  Reserved for landing-page-style emphasis.
+        // atomberg.in.  Reserved for landing-page-style emphasis.
         cta:  "h-13 px-7  text-base rounded-[10px]",
         icon: "h-9  w-9   p-0",
       },

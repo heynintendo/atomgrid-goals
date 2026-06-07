@@ -9,11 +9,13 @@ import {
   Text,
 } from "@react-email/components";
 import type { ReactNode } from "react";
+import { APP_URL } from "@/lib/app-url";
 
 // Shared chrome for every transactional template.  Email clients can't
 // load custom fonts reliably and ignore most CSS variables, so brand
 // colours and the font stack are hardcoded inline.  Mirrors globals.css
-// so the email reads as a continuation of the in-app surface.
+// (Atomberg: near-black + amber on white) so the email reads as a
+// continuation of the in-app surface.
 
 interface BrandLayoutProps {
   // 1-line preview rendered by inboxes underneath the subject.
@@ -35,7 +37,9 @@ const COLORS = {
   text:       "#1A1A1A",
   textMuted:  "#54514B",
   textFaint:  "#8A8680",
-  brand:      "#0F5132",
+  ink:        "#1A1A1A",   // near-black header strip (mirrors atomberg.com's footer)
+  onInkFaint: "#A8A29E",   // muted label colour on the dark strip
+  brand:      "#FCB40C",   // Atomberg amber — accent only (divider, link underline, button bg)
 };
 
 export function BrandLayout({
@@ -66,21 +70,31 @@ export function BrandLayout({
             padding:         "32px",
           }}
         >
-          <Section style={{ marginBottom: 24 }}>
-            {/* Logo + "Goals" sub-label.  AtomGrid wordmark is the
-                public-served SVG so email clients (most of which load
-                external images) can render the brand mark.  Alt text
-                falls back to the AtomGrid text for image-blocked
-                clients. */}
+          {/* Dark header strip — mirrors atomberg.com's near-black footer:
+              the knockout logo (white wordmark + amber badge, a transparent
+              PNG so no white box shows on the dark fill) on #1A1A1A,
+              full-bleed by cancelling the container's 32px padding.  Absolute
+              URL via APP_URL so it resolves in an inbox and survives the
+              Vercel project rename; alt text falls back to "Atomberg" for
+              image-blocked clients. */}
+          <Section
+            style={{
+              backgroundColor:      COLORS.ink,
+              margin:               "-32px -32px 24px -32px",
+              padding:              "20px 32px",
+              borderTopLeftRadius:  8,
+              borderTopRightRadius: 8,
+            }}
+          >
             <table cellPadding={0} cellSpacing={0} style={{ borderCollapse: "collapse" }}>
               <tbody>
                 <tr>
                   <td style={{ verticalAlign: "middle", paddingRight: 10 }}>
                     <img
-                      src="https://atomgrid-goals.vercel.app/atomgrid-logo.svg"
-                      alt="AtomGrid"
-                      width={140}
-                      height={26}
+                      src={`${APP_URL}/atomberg-logo-dark.png`}
+                      alt="Atomberg"
+                      width={120}
+                      height={30}
                       style={{ display: "block" }}
                     />
                   </td>
@@ -90,7 +104,7 @@ export function BrandLayout({
                         fontFamily:    "ui-monospace, SFMono-Regular, Menlo, monospace",
                         fontSize:      11,
                         letterSpacing: "0.12em",
-                        color:         COLORS.textFaint,
+                        color:         COLORS.onInkFaint,
                         textTransform: "uppercase",
                       }}
                     >
@@ -129,8 +143,14 @@ export function BrandLayout({
 
           {children}
 
+          {/* Amber accent rule — Atomberg's signature highlight.  2px so it
+              reads as deliberate brand trim, not a faint hairline. */}
           <Hr
-            style={{ borderColor: COLORS.border, margin: "24px 0 16px 0" }}
+            style={{
+              border:          "none",
+              borderTop:       `2px solid ${COLORS.brand}`,
+              margin:          "24px 0 16px 0",
+            }}
           />
           <Text
             style={{
@@ -140,7 +160,7 @@ export function BrandLayout({
               margin:     0,
             }}
           >
-            AtomGrid Goal Setting &amp; Tracking Portal · transactional notice
+            Atomberg Goal Setting &amp; Tracking Portal · transactional notice
           </Text>
         </Container>
       </Body>
