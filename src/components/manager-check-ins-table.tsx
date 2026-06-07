@@ -42,7 +42,7 @@ interface ManagerCheckInsTableProps {
 const STATUS_LABEL: Record<GoalStatus, { label: string; dot: string }> = {
   NOT_STARTED: { label: "Not started", dot: "bg-text-muted" },
   ON_TRACK:    { label: "On track",    dot: "bg-info" },
-  COMPLETED:   { label: "Completed",   dot: "bg-brand" },
+  COMPLETED:   { label: "Completed",   dot: "bg-success" },
 };
 
 export function ManagerCheckInsTable({

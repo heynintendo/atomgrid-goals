@@ -30,8 +30,8 @@ interface PerGoalProgressProps {
   className?:  string;
 }
 
-const BRAND_PRIMARY = "#A4D845";
-const BRAND_NAVY    = "#23416F";
+const BRAND_PRIMARY = "#FCB40C";
+const BRAND_NAVY    = "#1A1A1A";
 const SLATE         = "#475569";
 
 // Horizontal-bar variant of the analytics distribution chart, scoped

@@ -15,7 +15,7 @@
 export type ChartSlot = "chart-1" | "chart-2" | "chart-3";
 
 const SEEDED: Record<string, ChartSlot> = {
-  "Karthik Iyer": "chart-1", // navy
+  "Karthik Iyer": "chart-1", // near-black ink
   "Anita Reddy":  "chart-2", // slate blue
   "Vikram Patel": "chart-3", // violet
 };
@@ -35,12 +35,14 @@ export function chartSlotForManager(name: string): ChartSlot {
 
 // Hex value for each slot — used by Recharts where it expects literal
 // colours, not CSS custom properties.  Keep these in lock-step with the
-// `--color-chart-*` tokens in globals.css.  Post-H20 the chart palette
-// is navy / slate / violet — high contrast on white and reads as
-// "instrumented dashboard" rather than logo-coloured marketing chart.
-// AtomGrid lime is reserved for CTAs + accents, not data-viz lines.
+// `--color-chart-*` tokens in globals.css.  The palette leads with
+// near-black ink (chart-1), then slate + violet for additional series —
+// high contrast on white, reads as an "instrumented dashboard" rather than
+// a logo-coloured marketing chart.  Atomberg amber is reserved for the
+// CTA/accent and the chart-4 highlight slot, never a thin data-viz line
+// (amber on white is near-invisible at a 1–2px stroke).
 export const CHART_HEX: Record<ChartSlot, string> = {
-  "chart-1": "#23416F",
+  "chart-1": "#1A1A1A",
   "chart-2": "#475569",
   "chart-3": "#7E22CE",
 };

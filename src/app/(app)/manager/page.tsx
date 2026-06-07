@@ -27,8 +27,8 @@ const PHASE_TO_PERIOD: Partial<Record<CyclePhase, CheckInPeriod>> = {
 const SHEET_STATUS_DOT: Record<GoalSheetStatus, string> = {
   DRAFT:     "bg-text-tertiary",
   SUBMITTED: "bg-status-warning",
-  APPROVED:  "bg-brand-primary",
-  LOCKED:    "bg-brand-primary",
+  APPROVED:  "bg-status-success",
+  LOCKED:    "bg-status-success",
   RETURNED:  "bg-status-danger",
 };
 const SHEET_STATUS_LABEL: Record<GoalSheetStatus, string> = {
@@ -119,9 +119,9 @@ export default async function ManagerOverviewPage() {
       }
     }
     return [
-      { label: "Approved · complete", value: approvedComplete, color: "#A4D845" },
+      { label: "Approved · complete", value: approvedComplete, color: "#15803D" },
       { label: "Approved · partial",  value: approvedPartial,  color: "#475569" },
-      { label: "Pending review",      value: pendingApproval,  color: "#23416F" },
+      { label: "Pending review",      value: pendingApproval,  color: "#1A1A1A" },
       { label: "Not started",         value: notStarted,       color: "#E5E5E5" },
     ].filter((s) => s.value > 0);
   })();

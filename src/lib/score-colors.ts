@@ -18,9 +18,11 @@ export interface ScoreColorTokens {
   border:  string;
   // Raw hex of the bucket's canonical colour.  Used by surfaces that need
   // to apply a dynamic alpha (heatmap) or pass the colour to a non-CSS
-  // consumer (Recharts).  Kept in lock-step with the corresponding token
-  // in globals.css — if you ever change `--color-danger` or `--color-brand`
-  // you must change the hex here too.
+  // consumer (Recharts).  Score colours are SEMANTIC (danger red / neutral /
+  // success green) and deliberately independent of the Atomberg brand accent
+  // (amber): a "good score" must read as green, never as the brand colour —
+  // so the rebrand left these intact.  Keep each baseHex in lock-step with the
+  // matching semantic token in globals.css (--color-status-danger / -success).
   baseHex: string;
   // Human label shown in tooltips and a11y announcements.  Lives here so
   // every consumer says the same thing.
@@ -46,9 +48,15 @@ const TOKENS: Record<ScoreBucket, ScoreColorTokens> = {
   },
   EXCEEDS: {
     bucket:  "EXCEEDS",
-    bg:      "bg-brand",
-    fg:      "text-brand",
-    border:  "border-brand",
+    // EXCEEDS is a semantic "good score" green, NOT the Atomberg brand.
+    // These were bg/text/border-brand, but --color-brand is now Atomberg
+    // amber — routed to the semantic success-green tokens so the pill stays
+    // green (amber would fail contrast as text AND collide with the brand
+    // accent).  baseHex left as the deep forest green per brand-migration
+    // decision; pill + heatmap both read unambiguously as "green / good."
+    bg:      "bg-success",
+    fg:      "text-success",
+    border:  "border-success",
     baseHex: "#0F5132",
     label:   "Exceeds",
   },
