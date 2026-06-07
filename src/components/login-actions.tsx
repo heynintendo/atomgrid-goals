@@ -98,7 +98,7 @@ export function LoginActions({ identities }: LoginActionsProps) {
 // 4-square Microsoft brandmark — sized to sit alongside the button's
 // 14px label without overpowering it.  Each square uses the canonical
 // Microsoft accent (red/green/blue/yellow) — semantic, not part of
-// AtomGrid's palette.
+// Atomberg's palette.
 function MicrosoftLogo() {
   return (
     <svg

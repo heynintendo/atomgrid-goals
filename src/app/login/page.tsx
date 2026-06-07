@@ -38,7 +38,7 @@ export default async function LoginPage() {
         <LoginActions identities={identities} />
 
         <p className="font-mono text-xs text-text-muted">
-          AtomGrid Goal Setting &amp; Tracking Portal &middot; AtomQuest 1.0
+          Atomberg Goal Setting &amp; Tracking Portal &middot; AtomQuest 1.0
         </p>
       </div>
     </main>

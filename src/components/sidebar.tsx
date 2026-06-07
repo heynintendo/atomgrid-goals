@@ -28,7 +28,7 @@ export function BrandMark({ className }: { className?: string }) {
   return (
     <Link
       href="/"
-      aria-label="AtomGrid Goals — home"
+      aria-label="Atomberg Goals — home"
       className={cn(
         "flex h-14 items-center gap-3 border-b border-border px-4",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2",

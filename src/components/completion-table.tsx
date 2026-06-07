@@ -56,8 +56,8 @@ const SHEET_PILL: Record<SheetState, { label: string; dot: string }> = {
   MISSING:   { label: "No sheet",   dot: "bg-text-placeholder" },
   DRAFT:     { label: "Draft",      dot: "bg-text-muted" },
   SUBMITTED: { label: "Submitted",  dot: "bg-info" },
-  APPROVED:  { label: "Approved",   dot: "bg-brand" },
-  LOCKED:    { label: "Locked",     dot: "bg-brand" },
+  APPROVED:  { label: "Approved",   dot: "bg-success" },
+  LOCKED:    { label: "Locked",     dot: "bg-success" },
   RETURNED:  { label: "Returned",   dot: "bg-warning" },
 };
 
@@ -67,7 +67,7 @@ const CHECKIN_PILL: Record<
 > = {
   NOT_STARTED: { label: "Not started", dot: "bg-text-muted" },
   IN_PROGRESS: { label: "In progress", dot: "bg-info" },
-  SUBMITTED:   { label: "Submitted",   dot: "bg-brand" },
+  SUBMITTED:   { label: "Submitted",   dot: "bg-success" },
   OVERDUE:     { label: "Overdue",     dot: "bg-danger" },
 };
 

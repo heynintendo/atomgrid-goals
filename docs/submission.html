@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AtomQuest 1.0 — Submission</title>
+<style>
+  @page { size: A3 landscape; margin: 14mm 18mm; }
+  body { font-family: 'Poppins', -apple-system, system-ui, sans-serif; font-size: 10pt; line-height: 1.5; color: #0A0A0A; margin: 0; }
+  h1 { color: #1A1A1A; font-size: 24pt; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 4pt; }
+  h2 { color: #1A1A1A; font-size: 12pt; font-weight: 600; margin: 10pt 0 4pt; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 9pt; font-weight: 500; color: #475569; margin-bottom: 3pt; }
+  .subtitle { font-size: 11pt; color: #475569; margin-bottom: 10pt; }
+  .url { font-family: ui-monospace, Menlo, monospace; font-size: 9.5pt; background: #FAFAFA; padding: 2pt 6pt; border-radius: 3pt; color: #1A1A1A; text-decoration: none; border: 1px solid #E5E5E5; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12pt; }
+  .grid-3-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9pt; margin-top: 5pt; }
+  .card { border: 1px solid #E5E5E5; border-radius: 6pt; padding: 7pt 10pt; }
+  .card-header { font-weight: 500; color: #1A1A1A; margin-bottom: 2pt; font-size: 9.5pt; }
+  .card-body { font-size: 9pt; color: #475569; font-family: ui-monospace, Menlo, monospace; }
+  ul { margin: 0; padding-left: 14pt; }
+  li { margin-bottom: 1.5pt; font-size: 9.5pt; line-height: 1.45; }
+  .accent { border-left: 3px solid #FCB40C; padding-left: 8pt; }
+  hr { border: none; border-top: 1px solid #E5E5E5; margin: 8pt 0; }
+  strong { color: #1A1A1A; }
+  p { margin: 5pt 0; }
+  .diagram-page { page-break-before: always; text-align: center; padding-top: 0; }
+  .diagram-page img { max-width: 100%; max-height: 270mm; height: auto; }
+</style>
+</head>
+<body>
+
+<div class="eyebrow">AtomQuest Hackathon 1.0 · Submission</div>
+<h1>AtomQuest 1.0</h1>
+<div class="subtitle">Goal Setting &amp; Tracking Portal · Built for Atomberg</div>
+
+<p>Internal goal-setting and quarterly check-in portal implementing the BRD Phase 1 + Phase 2 spec with bonus features for region-pinned deployment, escalation cron with multi-recipient email fan-out, Microsoft Entra ID SSO, and time-travel debugging for admins.</p>
+
+<div class="grid-2">
+  <div><div class="eyebrow">Hosted URL</div><a class="url" href="https://atomberg-goals.vercel.app">https://atomberg-goals.vercel.app</a></div>
+  <div><div class="eyebrow">GitHub Repository</div><a class="url" href="https://github.com/heynintendo/atomberg-goals">https://github.com/heynintendo/atomberg-goals</a></div>
+</div>
+
+<div class="eyebrow" style="margin-top: 10pt;">Demo Credentials</div>
+<p style="margin: 2pt 0; font-size: 9.5pt; color: #475569;">Demo-role-switcher pattern — no passwords required. Click any identity card on /login. Real Microsoft Entra ID SSO also wired via "Sign in with Microsoft" button.</p>
+<div class="grid-3-cards">
+  <div class="card"><div class="card-header">Riya Sharma · Employee</div><div class="card-body">emp@demo</div></div>
+  <div class="card"><div class="card-header">Karthik Iyer · Manager</div><div class="card-body">mgr@demo</div></div>
+  <div class="card"><div class="card-header">Priya Nair · Admin</div><div class="card-body">admin@demo</div></div>
+</div>
+
+<hr>
+
+<div class="grid-3">
+  <div>
+    <h2>BRD Phase 1 — Goal Setting</h2>
+    <ul>
+      <li>Goal sheet drafting with weightage validation (sum = 100%)</li>
+      <li>Shared goals with primary-owner sync</li>
+      <li>Manager approval flow with return-for-rework reason</li>
+      <li>Sheet locked on approval; admin unlock with audit trail</li>
+      <li>Quarterly check-ins with window-aware read/write state</li>
+      <li>Manager feedback on individual check-ins</li>
+      <li>L1 → L2 escalation engine with 7-day window-close threshold</li>
+    </ul>
+  </div>
+  <div>
+    <h2>BRD Phase 2 — Reporting</h2>
+    <ul>
+      <li>Completion reports (org-wide and manager-scoped)</li>
+      <li>Performance analytics: QoQ trend, employee × period heatmap, score distribution, manager effectiveness with org-median reference</li>
+      <li>Transactional audit log — every post-approval mutation paired with diff payload</li>
+      <li>Role-aware overview dashboards for employee, manager, and admin</li>
+    </ul>
+  </div>
+  <div>
+    <h2 class="accent">Bonuses Earned</h2>
+    <ul>
+      <li>Microsoft Entra ID SSO (multi-tenant + personal MSAs)</li>
+      <li>Vercel region pinning (sin1) co-located with Neon Postgres (ap-southeast-1) — ~115ms p50 RTT vs ~1000ms on US-East default</li>
+      <li>Daily Vercel Cron at 02:00 UTC for L1→L2 promotion</li>
+      <li>Multi-recipient email fan-out — 8 templates × audience-aware bodies</li>
+      <li>Resend rate-limit-aware paced sends (600ms gap, &lt;2 req/sec ceiling)</li>
+      <li>Time-travel admin tool — system clock override</li>
+      <li>Mobile-responsive throughout (375px+)</li>
+      <li>WCAG AA — zero critical/serious axe-core violations</li>
+    </ul>
+  </div>
+</div>
+
+<hr>
+
+<div class="grid-2">
+  <div>
+    <h2>Tech Stack</h2>
+    <ul>
+      <li><strong>Frontend:</strong> Next.js 16.2.6 (App Router, RSC, Server Actions), React 19, TypeScript, Tailwind v4, shadcn/ui, Radix, Recharts</li>
+      <li><strong>Backend:</strong> Prisma 7, Neon Postgres (ap-southeast-1), Auth.js v5</li>
+      <li><strong>Services:</strong> Resend, Microsoft Entra ID</li>
+      <li><strong>Infrastructure:</strong> Vercel (sin1 region), Vercel Cron, Vercel Edge Network</li>
+      <li><strong>QA:</strong> Playwright + axe-core</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Known Limitations</h2>
+    <ul>
+      <li><strong>Single demo inbox:</strong> all transactional emails route to RESEND_TO_EMAIL for hackathon visibility; production would use user.email</li>
+      <li><strong>Entra ID publisher verification deferred:</strong> consent in restricted-tenant orgs would require admin approval. Personal MSAs sign in cleanly today.</li>
+      <li><strong>Vercel Hobby tier:</strong> cron limited to daily schedule</li>
+      <li><strong>Org-management surfaces</strong> (Cycles, Users, Thrust areas, Shared goals) scaffolded but deferred — sidebar trimmed so judges only see live surfaces</li>
+    </ul>
+  </div>
+</div>
+
+<div class="diagram-page">
+  <img src="./architecture.svg" alt="AtomQuest 1.0 system architecture diagram">
+</div>
+
+</body>
+</html>

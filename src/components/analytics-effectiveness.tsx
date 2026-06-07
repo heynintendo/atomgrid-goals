@@ -54,7 +54,7 @@ export function AnalyticsEffectiveness({
     let fill = "#475569"; // slate — at-median default
     if (median != null) {
       if (b.avgScorePct < median - MEDIAN_BAND_PP)      fill = "#B91C1C"; // status-danger
-      else if (b.avgScorePct > median + MEDIAN_BAND_PP) fill = "#A4D845"; // brand-primary
+      else if (b.avgScorePct > median + MEDIAN_BAND_PP) fill = "#FCB40C"; // brand-primary
     } else {
       // No median yet (single team in scope, or no scored teams) —
       // fall back to the absolute-band colour from H16.

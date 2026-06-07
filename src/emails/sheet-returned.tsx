@@ -32,7 +32,7 @@ export function SheetReturnedEmail({
       <div
         style={{
           backgroundColor: "#F5F3EE",
-          borderLeft:      "2px solid #0F5132",
+          borderLeft:      "2px solid #FCB40C",
           padding:         "12px 16px",
           margin:          "16px 0",
           fontSize:        14,

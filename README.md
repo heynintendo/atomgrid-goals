@@ -1,6 +1,6 @@
-# AtomGrid Goals
+# Atomberg Goals
 
-AtomGrid Goals is a goal setting and tracking portal for organisations running an annual cycle with four quarterly check-ins. Employees own the draft of their goal sheet across thrust areas, managers approve and add structured feedback at each quarter, and admins govern the cycle, audit overrides, and shift the system clock when demoing across quarters.
+Atomberg Goals is a goal setting and tracking portal for organisations running an annual cycle with four quarterly check-ins. Employees own the draft of their goal sheet across thrust areas, managers approve and add structured feedback at each quarter, and admins govern the cycle, audit overrides, and shift the system clock when demoing across quarters.
 
 ## Stack
 

@@ -165,7 +165,7 @@ export async function GET(req: NextRequest) {
   ];
 
   if (formatParam === "csv") {
-    const filename = `atomgrid-completion-${period}-${datePart}.csv`;
+    const filename = `atomberg-completion-${period}-${datePart}.csv`;
     return new NextResponse(toCsv(cells), {
       status: 200,
       headers: {
@@ -179,7 +179,7 @@ export async function GET(req: NextRequest) {
   // xlsx branch — wrap the Uint8Array as a Blob so NextResponse's BodyInit
   // type accepts it cleanly (raw Uint8Array works at runtime but tsc
   // narrows BodyInit too strictly in current types).
-  const filename = `atomgrid-completion-${period}-${datePart}.xlsx`;
+  const filename = `atomberg-completion-${period}-${datePart}.xlsx`;
   const buf = await buildXlsx(cells);
   const blob = new Blob([buf as BlobPart], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

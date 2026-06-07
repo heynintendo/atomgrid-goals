@@ -95,9 +95,9 @@ export default async function AdminOverviewPage() {
       }
     }
     return [
-      { label: "Approved · complete", value: approvedComplete, color: "#A4D845" },
+      { label: "Approved · complete", value: approvedComplete, color: "#15803D" },
       { label: "Approved · partial",  value: approvedPartial,  color: "#475569" },
-      { label: "Pending review",      value: pendingReview,    color: "#23416F" },
+      { label: "Pending review",      value: pendingReview,    color: "#1A1A1A" },
       { label: "Draft / returned",    value: draftOrReturned,  color: "#E5E5E5" },
     ].filter((s) => s.value > 0);
   })();
@@ -164,7 +164,7 @@ export default async function AdminOverviewPage() {
             Org · Overview
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">
-            AtomGrid Goal Setting · {cycle.name}
+            Atomberg Goal Setting · {cycle.name}
           </h1>
           <p className="text-sm text-text-secondary">
             {periodLabel} {cycle.name} · {dateState.isTraveled ? "Time-travel active" : "Live clock"} · {totalUsers} users
@@ -244,7 +244,7 @@ function NoActiveCycle() {
         Org · Overview
       </p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-        AtomGrid Goal Setting
+        Atomberg Goal Setting
       </h1>
       <p className="mt-2 text-sm text-text-secondary">
         No active cycle configured yet. Use the Cycles admin page to start a

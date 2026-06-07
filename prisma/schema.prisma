@@ -1,4 +1,4 @@
-// AtomGrid Goal Setting & Tracking Portal — data model
+// Atomberg Goal Setting & Tracking Portal — data model
 // Plan section 3.  Prisma 7 + Neon (driverAdapters stable, no preview flag).
 
 generator client {

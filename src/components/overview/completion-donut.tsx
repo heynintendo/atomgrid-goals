@@ -3,10 +3,10 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 
-const BRAND_PRIMARY = "#A4D845";
+const BRAND_PRIMARY = "#FCB40C";
 const SLATE         = "#475569";
 const BORDER        = "#E5E5E5";
-const NAVY          = "#23416F";
+const NAVY          = "#1A1A1A";
 const DANGER_SUBTLE = "#FEE2E2";
 
 export interface DonutSlice {
